@@ -1,0 +1,78 @@
+name: coursectl release
+
+# Cut a release by tagging: git tag coursectl/vX.Y.Z && git push origin coursectl/vX.Y.Z
+# Students never compile coursectl; the bootstrap wrappers in scripts/
+# download these prebuilt static binaries from the GitHub Release.
+
+on:
+  push:
+    tags:
+      - "coursectl/v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: build and publish binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go (version pinned by coursectl/go.mod)
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: coursectl/go.mod
+          cache-dependency-path: coursectl/go.sum
+
+      - name: Run tests
+        working-directory: coursectl
+        run: |
+          go vet ./...
+          go test -race ./...
+
+      - name: Build static binaries
+        working-directory: coursectl
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#coursectl/}"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          MODULE="github.com/ai-eng-bootcamps/ai-native-sweng/coursectl"
+          LDFLAGS="-s -w"
+          LDFLAGS="${LDFLAGS} -X ${MODULE}/internal/version.Version=${VERSION}"
+          LDFLAGS="${LDFLAGS} -X ${MODULE}/internal/version.Commit=${GITHUB_SHA}"
+          LDFLAGS="${LDFLAGS} -X ${MODULE}/internal/version.Date=${DATE}"
+
+          mkdir -p dist
+          for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64; do
+            GOOS="${platform%/*}"
+            GOARCH="${platform#*/}"
+            BIN="coursectl"
+            if [ "$GOOS" = "windows" ]; then
+              BIN="coursectl.exe"
+            fi
+
+            echo "Building ${GOOS}/${GOARCH}..."
+            CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
+              go build -trimpath -ldflags "$LDFLAGS" -o "build/${GOOS}_${GOARCH}/${BIN}" .
+
+            NAME="coursectl_${VERSION}_${GOOS}_${GOARCH}"
+            if [ "$GOOS" = "windows" ]; then
+              (cd "build/${GOOS}_${GOARCH}" && zip -q "../../dist/${NAME}.zip" "$BIN")
+            else
+              tar -C "build/${GOOS}_${GOARCH}" -czf "dist/${NAME}.tar.gz" "$BIN"
+            fi
+          done
+
+          (cd dist && sha256sum -- *.tar.gz *.zip > SHA256SUMS)
+          cat dist/SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            coursectl/dist/*.tar.gz
+            coursectl/dist/*.zip
+            coursectl/dist/SHA256SUMS

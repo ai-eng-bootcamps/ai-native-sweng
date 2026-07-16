@@ -1,0 +1,26 @@
+# Default model configuration (spec 5.3, 20, 21).
+#
+# mode selects the execution mode: "live", "scripted", or "replay".
+# Core labs default to scripted or replay mode; live mode is opt-in.
+# Relative paths below are resolved against this file's directory.
+# Format documentation: docs/model-modes.md.
+
+mode = "scripted"
+
+[scripted]
+# JSON script of predefined responses (see src/anse_harness/models/scripted.py).
+script = "scripted-demo.json"
+
+[replay]
+# JSONL trace of captured model interactions (see docs/trace-events.md).
+trace = "../../traces/examples/investigation-demo.jsonl"
+
+[live]
+# Default live provider is Anthropic; fallbacks are "openai" and "gemini" (spec 21).
+provider = "anthropic"
+model = "claude-opus-4-8"
+
+[live.cost]
+# USD per million tokens, used by the adapter's cost calculation hook.
+input_usd_per_mtok = 5.0
+output_usd_per_mtok = 25.0

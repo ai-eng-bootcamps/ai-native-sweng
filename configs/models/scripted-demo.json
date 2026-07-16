@@ -1,0 +1,28 @@
+[
+  {
+    "expect_substring": "reservation lifecycle",
+    "response": {
+      "text": "I will start by listing the booking package files.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "list_files",
+          "arguments": { "path": "internal/booking" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 42, "output_tokens": 18 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "reservation.go",
+    "response": {
+      "text": "The reservation lifecycle is pending -> confirmed -> completed, with cancelled reachable from pending and confirmed. Transitions are implemented in internal/booking/reservation.go.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 96, "output_tokens": 41 },
+      "stop_reason": "end_turn"
+    }
+  }
+]
