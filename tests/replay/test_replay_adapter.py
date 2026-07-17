@@ -10,6 +10,7 @@ from anse_harness.models import (
     ReplayAdapter,
     ReplayExhaustedError,
     ReplayMismatchError,
+    ToolCall,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -30,7 +31,13 @@ def _second_request() -> ModelRequest:
     return ModelRequest(
         messages=[
             *first.messages,
-            Message("assistant", "I will start by listing the booking package files."),
+            Message(
+                "assistant",
+                "I will start by listing the booking package files.",
+                tool_calls=[
+                    ToolCall(id="call-1", name="list_files", arguments={"path": "internal/booking"})
+                ],
+            ),
             Message("tool", "reservation.go availability.go policy.go", tool_call_id="call-1"),
         ]
     )
@@ -48,6 +55,13 @@ def test_replays_recorded_interactions_in_order() -> None:
     second = adapter.complete(_second_request())
     assert second.stop_reason == "end_turn"
     assert "pending -> confirmed -> completed" in second.text
+
+
+def test_replayed_response_to_message_matches_recorded_history() -> None:
+    adapter = ReplayAdapter(EXAMPLE_TRACE)
+    first = adapter.complete(_first_request())
+    # The assistant turn recorded in the trace is exactly the first response's history message.
+    assert first.to_message() == _second_request().messages[2]
 
 
 def test_request_mismatch_raises() -> None:

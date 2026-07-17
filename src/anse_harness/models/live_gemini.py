@@ -1,9 +1,11 @@
 """Live Gemini adapter: fallback provider (spec 21).
 
 Thin, non-streaming implementation over the google-genai SDK, imported lazily
-so scripted and replay modes work with no provider SDKs installed. Tool
-results are passed as function responses; assistant messages map to the
-"model" role.
+so scripted and replay modes work with no provider SDKs installed. Assistant
+messages map to the "model" role, with tool calls as function_call parts;
+tool results are passed as function responses addressed by function name,
+resolved from the originating assistant tool call, with consecutive results
+grouped into a single turn as Gemini requires for parallel calls.
 """
 
 from __future__ import annotations
@@ -36,6 +38,40 @@ GEMINI_CAPABILITIES = ModelCapabilities(
 )
 
 
+def _to_contents(types: Any, messages: list[Message]) -> tuple[str, list[Any]]:
+    """Map messages to google-genai contents; `types` is the SDK's types module."""
+    system_parts: list[str] = []
+    contents: list[Any] = []
+    call_names: dict[str, str] = {}
+    tool_turn: Any = None  # user Content collecting the current run of tool results
+    for m in messages:
+        if m.role not in ("tool", "system"):  # system messages never enter contents
+            tool_turn = None
+        if m.role == "system":
+            system_parts.append(m.content)
+        elif m.role == "tool":
+            name = call_names.get(m.tool_call_id or "", "tool")
+            part = types.Part.from_function_response(name=name, response={"result": m.content})
+            # Gemini requires all responses to one function-call turn in one turn.
+            if tool_turn is None:
+                tool_turn = types.Content(role="user", parts=[part])
+                contents.append(tool_turn)
+            else:
+                tool_turn.parts.append(part)
+        elif m.role == "assistant" and m.tool_calls:
+            parts: list[Any] = []
+            if m.content:
+                parts.append(types.Part(text=m.content))
+            for c in m.tool_calls:
+                call_names[c.id] = c.name
+                parts.append(types.Part.from_function_call(name=c.name, args=c.arguments))
+            contents.append(types.Content(role="model", parts=parts))
+        else:
+            role = "model" if m.role == "assistant" else "user"
+            contents.append(types.Content(role=role, parts=[types.Part(text=m.content)]))
+    return "\n\n".join(system_parts), contents
+
+
 class GeminiAdapter(ModelAdapter):
     """Live model mode against the Gemini API via google-genai."""
 
@@ -55,33 +91,9 @@ class GeminiAdapter(ModelAdapter):
         self._model = model
         self._capabilities = capabilities if capabilities is not None else GEMINI_CAPABILITIES
 
-    def _to_contents(self, messages: list[Message]) -> tuple[str, list[Any]]:
-        types = self._genai.types
-        system_parts: list[str] = []
-        contents: list[Any] = []
-        for m in messages:
-            if m.role == "system":
-                system_parts.append(m.content)
-            elif m.role == "tool":
-                contents.append(
-                    types.Content(
-                        role="user",
-                        parts=[
-                            types.Part.from_function_response(
-                                name=m.tool_call_id or "tool",
-                                response={"result": m.content},
-                            )
-                        ],
-                    )
-                )
-            else:
-                role = "model" if m.role == "assistant" else "user"
-                contents.append(types.Content(role=role, parts=[types.Part(text=m.content)]))
-        return "\n\n".join(system_parts), contents
-
     def complete(self, request: ModelRequest) -> ModelResponse:
         types = self._genai.types
-        system, contents = self._to_contents(request.messages)
+        system, contents = _to_contents(types, request.messages)
         config_kwargs: dict[str, Any] = {
             "max_output_tokens": request.max_tokens,
             "http_options": types.HttpOptions(timeout=int(request.timeout_seconds * 1000)),

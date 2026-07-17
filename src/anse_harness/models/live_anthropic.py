@@ -2,8 +2,9 @@
 
 Thin, non-streaming implementation. The anthropic SDK is imported lazily so
 scripted and replay modes work with no provider SDKs installed. Assistant
-messages are passed as plain text; "tool" role messages are mapped to
-tool_result content blocks.
+messages with tool calls are mapped to tool_use content blocks; "tool" role
+messages are mapped to tool_result content blocks referencing the tool_use id,
+with consecutive results grouped into a single user message.
 """
 
 from __future__ import annotations
@@ -45,18 +46,25 @@ def _split_messages(messages: list[Message]) -> tuple[str, list[dict[str, Any]]]
         if m.role == "system":
             system_parts.append(m.content)
         elif m.role == "tool":
-            wire.append(
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": m.tool_call_id,
-                            "content": m.content,
-                        }
-                    ],
-                }
+            block = {
+                "type": "tool_result",
+                "tool_use_id": m.tool_call_id,
+                "content": m.content,
+            }
+            # All results answering one assistant turn must share one user message.
+            if wire and wire[-1]["role"] == "user" and isinstance(wire[-1]["content"], list):
+                wire[-1]["content"].append(block)
+            else:
+                wire.append({"role": "user", "content": [block]})
+        elif m.role == "assistant" and m.tool_calls:
+            blocks: list[dict[str, Any]] = []
+            if m.content:
+                blocks.append({"type": "text", "text": m.content})
+            blocks.extend(
+                {"type": "tool_use", "id": c.id, "name": c.name, "input": c.arguments}
+                for c in m.tool_calls
             )
+            wire.append({"role": "assistant", "content": blocks})
         else:
             wire.append({"role": m.role, "content": m.content})
     return "\n\n".join(system_parts), wire

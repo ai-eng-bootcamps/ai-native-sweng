@@ -23,11 +23,13 @@ def test_scripted_conversation_end_to_end() -> None:
     assert call.name == "list_files"
 
     # Feed a deterministic tool result back, as the worker runtime will in Module 2.
+    # The assistant turn is echoed with its tool call so history round-trips faithfully.
     messages = [
         *messages,
-        Message("assistant", first.text),
+        first.to_message(),
         Message("tool", "reservation.go availability.go policy.go", tool_call_id=call.id),
     ]
+    assert messages[-2].tool_calls == [call]
     second = adapter.complete(ModelRequest(messages=messages))
     assert second.stop_reason == "end_turn"
     assert "reservation.go" in second.text

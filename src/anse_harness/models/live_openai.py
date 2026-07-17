@@ -2,7 +2,8 @@
 
 Thin, non-streaming implementation over the Chat Completions API. The openai
 SDK is imported lazily so scripted and replay modes work with no provider
-SDKs installed.
+SDKs installed. Assistant messages with tool calls are mapped to the
+tool_calls array; "tool" role messages reference the originating tool_call_id.
 """
 
 from __future__ import annotations
@@ -49,6 +50,21 @@ def _to_wire(messages: list[Message]) -> list[dict[str, Any]]:
     for m in messages:
         if m.role == "tool":
             wire.append({"role": "tool", "tool_call_id": m.tool_call_id, "content": m.content})
+        elif m.role == "assistant" and m.tool_calls:
+            wire.append(
+                {
+                    "role": "assistant",
+                    "content": m.content or None,
+                    "tool_calls": [
+                        {
+                            "id": c.id,
+                            "type": "function",
+                            "function": {"name": c.name, "arguments": json.dumps(c.arguments)},
+                        }
+                        for c in m.tool_calls
+                    ],
+                }
+            )
         else:
             wire.append({"role": m.role, "content": m.content})
     return wire

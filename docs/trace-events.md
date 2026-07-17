@@ -52,6 +52,12 @@ Model calls are recorded as a pair of events:
   `{text, tool_calls, structured_output, usage, stop_reason}` and `parent_event_id` pointing
   at the matching `model_requested` event
 
+Each entry in `messages` is `{role, content}` plus, when present, `tool_call_id` (on `tool`
+role messages, referencing the tool call the message answers) and `tool_calls` (on assistant
+messages that made tool calls). A tool call is `{id, name, arguments}` - the same shape in
+request message history and in `response.tool_calls` - so multi-turn tool conversations
+round-trip through traces intact.
+
 The replay model mode (`ReplayAdapter`) consumes exactly this format: it pairs each
 `model_responded` event with its parent request, verifies incoming request messages against
 the recorded ones, and re-serves the recorded responses in order. See

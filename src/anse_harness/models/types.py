@@ -24,6 +24,12 @@ class Message:
     content: str
     #: Set when role == "tool": the id of the tool call this message answers.
     tool_call_id: str | None = None
+    #: Set when role == "assistant": the tool calls this message made.
+    tool_calls: list[ToolCall] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.tool_calls and self.role != "assistant":
+            raise ValueError(f"tool_calls are only valid on assistant messages, got {self.role!r}")
 
 
 @dataclass(frozen=True)
@@ -102,6 +108,21 @@ class ModelResponse:
     #: Normalized stop reason: "end_turn", "tool_use", "max_tokens", "refusal".
     stop_reason: str = "end_turn"
 
+    def to_message(self) -> Message:
+        """Convert to an assistant history message that carries this response's tool calls."""
+        return Message(role="assistant", content=self.text, tool_calls=list(self.tool_calls))
+
+
+def _tool_calls_to_payload(tool_calls: list[ToolCall]) -> list[dict[str, Any]]:
+    return [{"id": c.id, "name": c.name, "arguments": c.arguments} for c in tool_calls]
+
+
+def _tool_calls_from_payload(payload: list[dict[str, Any]]) -> list[ToolCall]:
+    return [
+        ToolCall(id=str(c["id"]), name=str(c["name"]), arguments=dict(c.get("arguments", {})))
+        for c in payload
+    ]
+
 
 def messages_to_payload(messages: list[Message]) -> list[dict[str, Any]]:
     """Serialize messages for trace payloads and script files."""
@@ -110,6 +131,8 @@ def messages_to_payload(messages: list[Message]) -> list[dict[str, Any]]:
         item: dict[str, Any] = {"role": m.role, "content": m.content}
         if m.tool_call_id is not None:
             item["tool_call_id"] = m.tool_call_id
+        if m.tool_calls:
+            item["tool_calls"] = _tool_calls_to_payload(m.tool_calls)
         out.append(item)
     return out
 
@@ -121,6 +144,7 @@ def messages_from_payload(payload: list[dict[str, Any]]) -> list[Message]:
             role=str(item["role"]),
             content=str(item["content"]),
             tool_call_id=item.get("tool_call_id"),
+            tool_calls=_tool_calls_from_payload(item.get("tool_calls", [])),
         )
         for item in payload
     ]
@@ -140,9 +164,7 @@ def response_to_payload(response: ModelResponse) -> dict[str, Any]:
     """Serialize a response for trace payloads (spec 19: model responded)."""
     return {
         "text": response.text,
-        "tool_calls": [
-            {"id": c.id, "name": c.name, "arguments": c.arguments} for c in response.tool_calls
-        ],
+        "tool_calls": _tool_calls_to_payload(response.tool_calls),
         "structured_output": response.structured_output,
         "usage": {
             "input_tokens": response.usage.input_tokens,
@@ -157,14 +179,7 @@ def response_from_payload(payload: dict[str, Any]) -> ModelResponse:
     usage = payload.get("usage", {})
     return ModelResponse(
         text=str(payload.get("text", "")),
-        tool_calls=[
-            ToolCall(
-                id=str(c["id"]),
-                name=str(c["name"]),
-                arguments=dict(c.get("arguments", {})),
-            )
-            for c in payload.get("tool_calls", [])
-        ],
+        tool_calls=_tool_calls_from_payload(payload.get("tool_calls", [])),
         structured_output=payload.get("structured_output"),
         usage=Usage(
             input_tokens=int(usage.get("input_tokens", 0)),
