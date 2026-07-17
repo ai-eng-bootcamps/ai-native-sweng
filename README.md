@@ -65,6 +65,6 @@ workspace/          gitignored; coursectl clones target repositories here
 
 Key documentation:
 
-- `docs/checkpoints.md` - checkpoint tag and branch conventions
+- `docs/checkpoints.md` - harness milestones and target-repository resets
 - `docs/trace-events.md` - the trace event standard and JSONL format
 - `docs/model-modes.md` - configuring live, scripted, and replay model modes
