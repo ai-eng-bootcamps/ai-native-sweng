@@ -1,0 +1,60 @@
+[
+  {
+    "expect_substring": "reservation lifecycle",
+    "response": {
+      "text": "I'll list the internal packages to see where the reservation lifecycle is implemented.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "list_files",
+          "arguments": { "path": "internal" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 52, "output_tokens": 24 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "internal/booking/lifecycle.go",
+    "response": {
+      "text": "The booking package looks central. I'll search it for the status definitions.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "search_text",
+          "arguments": { "query": "Status", "path": "internal/booking" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 96, "output_tokens": 28 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "Status",
+    "response": {
+      "text": "Now I'll read the transition rules to confirm what governs the lifecycle.",
+      "tool_calls": [
+        {
+          "id": "call-3",
+          "name": "read_file",
+          "arguments": { "path": "internal/booking/lifecycle.go" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 168, "output_tokens": 22 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "CanTransition",
+    "response": {
+      "text": "Relevant source files: internal/booking/reservation.go defines the Status constants; internal/booking/lifecycle.go defines the permitted transitions in CanTransition; internal/api/reservations.go routes the endpoints that trigger transitions. Relevant test: internal/booking/lifecycle_test.go pins the transition matrix. The lifecycle is pending -> confirmed -> completed, with cancelled reachable from pending and confirmed.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 232, "output_tokens": 84 },
+      "stop_reason": "end_turn"
+    }
+  }
+]

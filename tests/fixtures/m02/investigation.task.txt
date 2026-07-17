@@ -1,0 +1,1 @@
+Which files and tests are relevant to mapping the reservation lifecycle in the bookit repository? List the relevant source files and the relevant test files, and note what each one contributes. Do not modify the repository.
