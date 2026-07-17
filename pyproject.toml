@@ -35,6 +35,14 @@ packages = ["src/anse_harness"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Course exercise tests (the student implements the scaffolding to make them pass) are
+# marked "student_impl" and excluded from the default run, so this suite validates the
+# supplied harness and stays green on a fresh clone and in CI. Run the exercises with:
+#   uv run pytest -m student_impl
+addopts = "-m 'not student_impl'"
+markers = [
+    "student_impl: a course exercise the student implements; excluded from the default and CI run",
+]
 
 [tool.ruff]
 line-length = 100

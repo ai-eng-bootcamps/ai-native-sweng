@@ -11,6 +11,8 @@ import pytest
 
 from anse_harness.tools.read_file import PathValidationError, ReadFileTool
 
+pytestmark = pytest.mark.student_impl
+
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "m02"
 FIXTURE_REPO = FIXTURES / "repo"
 TARGET = "internal/booking/reservation.go"

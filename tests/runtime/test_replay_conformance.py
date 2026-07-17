@@ -21,6 +21,8 @@ from anse_harness.state.state import RunStatus
 from anse_harness.tools.base import ToolRegistry
 from anse_harness.tools.read_file import ReadFileTool
 
+pytestmark = pytest.mark.student_impl
+
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "m02"
 FIXTURE_REPO = FIXTURES / "repo"
 TASK = (FIXTURES / "task.txt").read_text(encoding="utf-8").strip()

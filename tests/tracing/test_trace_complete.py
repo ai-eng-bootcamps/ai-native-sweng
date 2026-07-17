@@ -6,11 +6,15 @@ stubs and passes once the loop emits events to the reference behaviour.
 
 from pathlib import Path
 
+import pytest
+
 from anse_harness.models import ScriptedAdapter
 from anse_harness.runtime.loop import run_investigation
 from anse_harness.tools.base import ToolRegistry
 from anse_harness.tools.read_file import ReadFileTool
 from anse_harness.tracing import TraceWriter, read_trace
+
+pytestmark = pytest.mark.student_impl
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "m02"
 FIXTURE_REPO = FIXTURES / "repo"

@@ -6,11 +6,15 @@ and state are implemented to the reference behaviour in Module 2, Lesson 2.1.
 
 from pathlib import Path
 
+import pytest
+
 from anse_harness.models import ModelResponse, ScriptedAdapter, ScriptStep, ToolCall, Usage
 from anse_harness.runtime.loop import run_investigation
 from anse_harness.state.state import RunStatus
 from anse_harness.tools.base import ToolRegistry
 from anse_harness.tools.read_file import ReadFileTool
+
+pytestmark = pytest.mark.student_impl
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "m02"
 FIXTURE_REPO = FIXTURES / "repo"
