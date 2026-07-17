@@ -1,0 +1,1 @@
+Map the reservation lifecycle in the bookit repository. Read internal/booking/reservation.go and report the reservation states and the transitions between them.

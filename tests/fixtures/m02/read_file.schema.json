@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "Repository-relative path to the file to read."
+    }
+  },
+  "required": ["path"],
+  "additionalProperties": false
+}

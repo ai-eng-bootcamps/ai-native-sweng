@@ -24,6 +24,8 @@ htmlcov/
 # scripts/bootstrap.{sh,ps1} extract the coursectl binary here
 /bin/
 
-# Execution traces are local artifacts, except the committed examples
+# Execution traces are local artifacts, except the committed examples and the
+# recorded course fixtures shipped with a module (e.g. Module 2 replay trace).
 traces/*
 !traces/examples/
+!traces/m02/
