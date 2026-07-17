@@ -16,20 +16,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ai-eng-bootcamps/ai-native-sweng/coursectl/internal/course"
 	"github.com/ai-eng-bootcamps/ai-native-sweng/coursectl/internal/prereq"
+	"github.com/ai-eng-bootcamps/ai-native-sweng/coursectl/internal/target"
 	"github.com/ai-eng-bootcamps/ai-native-sweng/coursectl/internal/version"
 	"github.com/ai-eng-bootcamps/ai-native-sweng/coursectl/internal/workspace"
 )
-
-const orgURL = "https://github.com/ai-eng-bootcamps"
-
-// targetRepos are the course target repositories cloned into workspace/
-// (spec sections 10.2-10.5). They are cloned, never forked.
-var targetRepos = []string{
-	"ai-native-sweng-bookit",
-	"ai-native-sweng-bookit-platform",
-	"ai-native-sweng-minefield",
-}
 
 // App carries the dependencies commands need. Fields are injectable so
 // tests do not depend on host tools or the real repository.
@@ -43,6 +35,18 @@ type App struct {
 	// GitBranch returns the current branch of the repository at root.
 	// Defaults to running git.
 	GitBranch func(ctx context.Context, root string) (string, error)
+	// NewManager builds the target-clone manager for a course root.
+	// Defaults to target.New; injectable so tests do not run git.
+	NewManager func(root string, out io.Writer) *target.Manager
+}
+
+// manager returns the target-clone manager for root, using the injected
+// factory when present.
+func (a *App) manager(root string) *target.Manager {
+	if a.NewManager != nil {
+		return a.NewManager(root, a.Stdout)
+	}
+	return target.New(root, a.Stdout)
 }
 
 // Run parses args and executes the selected command. A non-nil error means
@@ -96,8 +100,8 @@ func commands() []command {
 		{"setup", "", "verify prerequisites and prepare the workspace/ directory", runSetup},
 		{"status", "", "report repo root, workspace, prerequisites, and git branch", runStatus},
 		{"reset", "--module <number>", "reset target repositories to a module starting checkpoint", runReset},
-		{"start-lab", "<lab-id>", "prepare the starting state for a lab", singleArgStub("start-lab", "lab-id", 0)},
-		{"validate", "<lab-id>", "run the validation checks for a lab", singleArgStub("validate", "lab-id", 0)},
+		{"start-lab", "<lab-id>", "prepare the starting state for a lab", runStartLab},
+		{"validate", "<lab-id>", "run the validation checks for a lab", runValidate},
 		{"run-task", "<task-id>", "execute a task from the task dataset", singleArgStub("run-task", "task-id", 2)},
 		{"run-eval", "<evaluation-id>", "run an evaluation and collect its metrics", singleArgStub("run-eval", "evaluation-id", 8)},
 		{"replay", "<run-id>", "replay a captured run from its stored trace", singleArgStub("replay", "run-id", 2)},
@@ -160,7 +164,7 @@ func runVersion(_ context.Context, app *App, args []string) error {
 	return nil
 }
 
-func runReset(_ context.Context, app *App, args []string) error {
+func runReset(ctx context.Context, app *App, args []string) error {
 	fs := flag.NewFlagSet("reset", flag.ContinueOnError)
 	fs.SetOutput(app.Stderr)
 	module := fs.Int("module", -1, "module number to reset to (0-10)")
@@ -173,9 +177,24 @@ func runReset(_ context.Context, app *App, args []string) error {
 	if *module < 0 || *module > 10 {
 		return fmt.Errorf("usage: coursectl reset --module <number> (module must be 0-10)")
 	}
-	// Reset restores target repositories by checkpoint revision
-	// (spec sections 17-18), never by manually reversing changes.
-	return notImplemented(fmt.Sprintf("reset --module %d", *module), 0)
+
+	root, err := workspace.FindRepoRoot(app.WorkDir)
+	if err != nil {
+		return fmt.Errorf("locating course repository root: %w", err)
+	}
+	// The module->revision map is the source of truth; targets are reset by
+	// revision, never by tag (spec 17-18).
+	cp, err := course.ModuleCheckpoint(root, *module)
+	if err != nil {
+		return fmt.Errorf("resolving module %d checkpoint: %w", *module, err)
+	}
+	fmt.Fprintf(app.Stdout, "Resetting module %d target %s to revision %s (eight-step reset, spec 18):\n",
+		*module, cp.RepoName(), cp.Revision)
+	if err := app.manager(root).Reset(ctx, cp.RepoName(), cp.Revision); err != nil {
+		return fmt.Errorf("resetting module %d: %w", *module, err)
+	}
+	fmt.Fprintf(app.Stdout, "Module %d reset complete.\n", *module)
+	return nil
 }
 
 func runSetup(ctx context.Context, app *App, args []string) error {
@@ -201,14 +220,127 @@ func runSetup(ctx context.Context, app *App, args []string) error {
 	}
 	fmt.Fprintf(app.Stdout, "Workspace directory ready: %s (contents are gitignored)\n", ws)
 
-	fmt.Fprintln(app.Stdout, "Target repository clones (planned):")
-	for _, repo := range targetRepos {
-		fmt.Fprintf(app.Stdout, "  will clone %s/%s into %s%c%s\n",
-			orgURL, repo, workspace.DirName, filepath.Separator, repo)
+	summary, err := course.ValidateModelConfig(root)
+	if err != nil {
+		return fmt.Errorf("validating model configuration: %w", err)
 	}
-	fmt.Fprintln(app.Stdout, "NOTICE: the target repositories are not yet published; skipping the clone step.")
+	fmt.Fprintf(app.Stdout, "  %s\n", summary)
+
+	repos, err := course.TargetRepos(root)
+	if err != nil {
+		return fmt.Errorf("resolving target repositories: %w", err)
+	}
+	fmt.Fprintln(app.Stdout, "Cloning target repositories into workspace/ (from the checkpoint map):")
+	mgr := app.manager(root)
+	for _, cp := range repos {
+		if err := mgr.Clone(ctx, cp.Repository, cp.Revision); err != nil {
+			return fmt.Errorf("setting up %s: %w", cp.RepoName(), err)
+		}
+	}
 	fmt.Fprintln(app.Stdout, "Setup complete. Run 'coursectl status' to review your environment.")
 	return nil
+}
+
+func runStartLab(ctx context.Context, app *App, args []string) error {
+	if len(args) != 1 || args[0] == "" || strings.HasPrefix(args[0], "-") {
+		return fmt.Errorf("usage: coursectl start-lab <lab-id>")
+	}
+	labID := args[0]
+
+	root, err := workspace.FindRepoRoot(app.WorkDir)
+	if err != nil {
+		return fmt.Errorf("locating course repository root: %w", err)
+	}
+	m, err := course.LoadManifest(root, labID)
+	if err != nil {
+		return fmt.Errorf("loading lab %q: %w", labID, err)
+	}
+	mgr := app.manager(root)
+	repoName := m.RepoName()
+
+	fmt.Fprintf(app.Stdout, "Preparing lab %s (%s) on target %s at revision %s:\n",
+		m.ID, m.Title, repoName, m.StartingRevision)
+	// Phase-3 labs work in the main clone; no per-lab worktree is required.
+	if !mgr.Exists(repoName) {
+		// Fresh clone lands directly on the lab's starting revision.
+		fmt.Fprintln(app.Stdout, "  target clone missing; cloning it now")
+		if err := mgr.Clone(ctx, m.Repository, m.StartingRevision); err != nil {
+			return fmt.Errorf("cloning target for lab %s: %w", m.ID, err)
+		}
+	} else {
+		// Preserve any prior student work before the restore's clean removes
+		// it, then restore to this lab's starting revision (reset step 3).
+		for _, sub := range []string{"reports", "traces"} {
+			dest, saved, aerr := mgr.Archive(repoName, sub)
+			if aerr != nil {
+				return fmt.Errorf("preserving %s for lab %s: %w", sub, m.ID, aerr)
+			}
+			if saved {
+				fmt.Fprintf(app.Stdout, "  preserved existing %s -> %s\n", sub, dest)
+			}
+		}
+		if err := mgr.Restore(ctx, repoName, m.StartingRevision); err != nil {
+			return fmt.Errorf("preparing lab %s: %w", m.ID, err)
+		}
+	}
+	fmt.Fprintf(app.Stdout, "  fixtures loaded from tracked files at %s\n", m.StartingRevision[:12])
+	fmt.Fprintf(app.Stdout, "Lab %s is ready in workspace/%s. Run 'coursectl validate %s' when done.\n",
+		m.ID, repoName, m.ID)
+	return nil
+}
+
+func runValidate(ctx context.Context, app *App, args []string) error {
+	if len(args) != 1 || args[0] == "" || strings.HasPrefix(args[0], "-") {
+		return fmt.Errorf("usage: coursectl validate <lab-id>")
+	}
+	labID := args[0]
+
+	root, err := workspace.FindRepoRoot(app.WorkDir)
+	if err != nil {
+		return fmt.Errorf("locating course repository root: %w", err)
+	}
+	m, err := course.LoadManifest(root, labID)
+	if err != nil {
+		return fmt.Errorf("loading lab %q: %w", labID, err)
+	}
+	mgr := app.manager(root)
+	repoName := m.RepoName()
+	if !mgr.Exists(repoName) {
+		return fmt.Errorf("target clone %s is missing; run 'coursectl start-lab %s' first", repoName, m.ID)
+	}
+
+	fmt.Fprintf(app.Stdout, "Validating lab %s in workspace/%s (visible checks only; hidden graders are not run):\n",
+		m.ID, repoName)
+	failed := 0
+	for _, c := range m.VisibleValidation {
+		switch c.Kind {
+		case "command":
+			out, runErr := mgr.RunValidation(ctx, repoName, c.Command)
+			if runErr != nil {
+				failed++
+				fmt.Fprintf(app.Stdout, "  FAIL command: %s\n        %s\n", c.Command, indent(strings.TrimSpace(out)))
+			} else {
+				fmt.Fprintf(app.Stdout, "  ok   command: %s\n", c.Command)
+			}
+		default:
+			// artifact and human-review checks cannot be verified mechanically.
+			fmt.Fprintf(app.Stdout, "  --   %s (manual): %s\n", c.Kind, c.Description)
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("lab %s: %d visible validation command(s) failed", m.ID, failed)
+	}
+	fmt.Fprintf(app.Stdout, "Lab %s: all visible validation commands passed.\n", m.ID)
+	return nil
+}
+
+// indent prefixes each line of s so failing-command output is set off from the
+// validation report.
+func indent(s string) string {
+	if s == "" {
+		return "(no output)"
+	}
+	return strings.ReplaceAll(s, "\n", "\n        ")
 }
 
 func runStatus(ctx context.Context, app *App, args []string) error {

@@ -41,9 +41,15 @@ checksum, and extract the binary into `./bin/`.
 | `coursectl cleanup` | Remove temporary worktrees and stale lab state. |
 | `coursectl version` | Print version, commit, and build date. |
 
-This is the skeleton release: `setup`, `status`, and `version` are fully
-functional. The remaining commands validate their arguments and then report
-which course module brings their implementation; they never fake behavior.
+Phase 3 release: `setup`, `status`, `version`, `reset`, `start-lab`, and
+`validate` are fully functional. `setup` clones the target repositories named
+in the checkpoint map (`configs/checkpoints.json`) into `workspace/` at their
+pinned revision; `reset --module <n>` runs the eight-step reset (spec 18)
+against the target clone, never the harness repository; `start-lab` and
+`validate` resolve a lab id against the task dataset. The remaining commands
+(`run-task`, `run-eval`, `replay`, `inspect-trace`, `cleanup`) validate their
+arguments and then report which course module brings their implementation;
+they never fake behavior.
 
 ## Building and testing locally (maintainers)
 
