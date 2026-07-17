@@ -1,0 +1,92 @@
+{
+  "id": "bk-006",
+  "title": "Eliminate the double-booking race",
+  "category": "targeted-bug-fixing",
+  "partition": "development",
+  "modules": ["M3", "M8"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "Load testing shows that when two POST /reservations requests for the same slot on the same resource arrive at the same time, both can be accepted, double-booking the slot. Sequential requests behave correctly. Eliminate the race so that of any set of concurrent requests for conflicting slots, exactly one is admitted, and make the whole test suite clean under the race detector, which CI runs.",
+  "acceptance_criteria": [
+    "A new test issues at least two concurrent POST /reservations requests for the same slot and asserts that exactly one returns 201 Created while the rest return the structured conflict error.",
+    "go test -race ./... passes for the entire module, including the new concurrency test.",
+    "Sequential booking behavior is unchanged: all existing tests pass unmodified.",
+    "Overlapping requests for different resources are still admitted independently.",
+    "Existing files under internal/store/migrations/ are untouched; any schema change is a new, higher-numbered migration file."
+  ],
+  "constraints": [
+    "Follow AGENTS.md conventions: context.Context first parameter, wrapped errors, business rules in internal/booking.",
+    "Tests must be deterministic; synchronize goroutines explicitly, never with time.Sleep.",
+    "Do not edit existing migration files."
+  ],
+  "non_goals": [
+    "Distributed or cross-process locking.",
+    "Performance optimization of the booking path beyond correctness.",
+    "Changing the API contract of POST /reservations."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test -race ./...",
+      "description": "Race detector is clean across the whole module and the concurrency test passes."
+    },
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Standard suite passes."
+    }
+  ],
+  "hidden_validation": "grader:bk-006",
+  "baseline_configuration": "D",
+  "time_budget": "time-class-long",
+  "cost_budget": "cost-class-medium",
+  "expected_artifacts": [
+    "A diff against the starting revision",
+    "A new concurrency test",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Exactly one winner under concurrency, demonstrated by a deterministic test",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Race detector clean across the whole suite, not just the new test",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The chosen synchronization mechanism is justified and proportionate",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "No blocked or prohibited actions attempted (for example editing applied migrations)",
+      "metric_category": "safety"
+    }
+  ],
+  "known_ambiguities": [
+    "The mechanism is open: enforcing uniqueness in the database, serializing admission in the API layer, or a combination are all acceptable if the acceptance criteria and repo conventions hold - justify the choice.",
+    "How many concurrent requests the test should issue is open; two is the minimum, a small burst is more convincing."
+  ],
+  "recommended_context_sources": [
+    "AGENTS.md",
+    "internal/api/reservations.go",
+    "internal/api/server.go",
+    "internal/store/reservations.go",
+    "docs/architecture.md"
+  ],
+  "expected_failure_modes": [
+    "Fixing the booking insert while other shared state in the request path still trips the race detector.",
+    "A flaky concurrency test that only sometimes exercises the race."
+  ],
+  "parallelization_opportunities": [
+    "Root-cause investigation and concurrency-test authoring can proceed in parallel before the fix is chosen."
+  ]
+}

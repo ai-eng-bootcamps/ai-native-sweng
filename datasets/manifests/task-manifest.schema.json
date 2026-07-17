@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ai-eng-bootcamps/ai-native-sweng/blob/main/datasets/manifests/task-manifest.schema.json",
+  "title": "Course task manifest",
+  "description": "Machine-readable task manifest per Continuous Project Specification section 13.3. Vocabulary references: capability classes from canonical-reference.md section 6, baselines from spec section 15, metric categories from canonical-reference.md section 7. See SCHEMA.md.",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "category",
+    "partition",
+    "modules",
+    "repository",
+    "starting_revision",
+    "description",
+    "acceptance_criteria",
+    "constraints",
+    "non_goals",
+    "allowed_capabilities",
+    "prohibited_capabilities",
+    "risk_classification",
+    "visible_validation",
+    "hidden_validation",
+    "baseline_configuration",
+    "time_budget",
+    "cost_budget",
+    "expected_artifacts",
+    "human_review_rubric",
+    "known_ambiguities"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]+-[0-9]{3}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "enum": [
+        "repository-investigation",
+        "small-feature-implementation",
+        "targeted-bug-fixing",
+        "failing-test-diagnosis",
+        "test-creation",
+        "code-review",
+        "review-finding-verification",
+        "targeted-refactoring",
+        "documentation-correction",
+        "issue-triage",
+        "integration-conflict-resolution",
+        "release-preparation"
+      ]
+    },
+    "partition": {
+      "enum": ["practice", "development", "held-out"]
+    },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(M(10|[0-9])|evidence-gates|capstone)$"
+      }
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$"
+    },
+    "starting_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "allowed_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capabilityClass" }
+    },
+    "prohibited_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capabilityClass" }
+    },
+    "risk_classification": { "$ref": "#/$defs/capabilityClass" },
+    "visible_validation": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/validationCheck" }
+    },
+    "hidden_validation": {
+      "type": "string",
+      "pattern": "^grader:[a-z]+-[0-9]{3}$",
+      "description": "Opaque reference to a hidden grader in the private course-runner repository. Never contains the answer."
+    },
+    "baseline_configuration": {
+      "enum": ["A", "B", "C", "D", "E", "F"]
+    },
+    "time_budget": {
+      "enum": ["time-class-short", "time-class-medium", "time-class-long"]
+    },
+    "cost_budget": {
+      "enum": ["cost-class-replay", "cost-class-small", "cost-class-medium", "cost-class-large"]
+    },
+    "expected_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "human_review_rubric": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rubricItem" }
+    },
+    "known_ambiguities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "recommended_context_sources": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_failure_modes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "parallelization_opportunities": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "security_notes": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instructor_notes": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "capabilityClass": {
+      "enum": [
+        "class-0-observation",
+        "class-1-local-reversible",
+        "class-2-local-consequential",
+        "class-3-external-reversible",
+        "class-4-external-consequential",
+        "class-5-prohibited"
+      ]
+    },
+    "validationCheck": {
+      "type": "object",
+      "required": ["kind", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["command", "artifact", "human-review"] },
+        "command": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "command" } } },
+          "then": { "required": ["command"] },
+          "else": { "not": { "required": ["command"] } }
+        }
+      ]
+    },
+    "rubricItem": {
+      "type": "object",
+      "required": ["criterion", "metric_category"],
+      "additionalProperties": false,
+      "properties": {
+        "criterion": { "type": "string", "minLength": 1 },
+        "metric_category": {
+          "enum": ["outcome", "process", "safety", "economic", "human-impact"]
+        }
+      }
+    }
+  }
+}

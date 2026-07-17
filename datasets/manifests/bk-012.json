@@ -1,0 +1,109 @@
+{
+  "id": "bk-012",
+  "title": "Add a per-resource concurrent-booking limit",
+  "category": "small-feature-implementation",
+  "partition": "held-out",
+  "modules": ["evidence-gates", "capstone"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "bookit currently admits at most one active reservation per resource for any time slot: any overlap with a pending or confirmed reservation is rejected. Product wants configurable concurrency: a resource should be able to accept up to a configurable number of simultaneous overlapping reservations - for example a four-lane pool that four parties can book independently for the same hour. Add a per-resource concurrent-booking limit, configurable when the resource is created, enforced at reservation creation, with tests.",
+  "acceptance_criteria": [
+    "Resource creation accepts an optional per-resource concurrent-booking limit; the limit is a positive integer.",
+    "When no limit is supplied, behavior is unchanged from today: at most one active reservation per slot.",
+    "With a limit of N, up to N overlapping pending-or-confirmed reservations are admitted for the same slot and the N+1st overlapping request is rejected with HTTP 409, code slot_unavailable, using the structured error envelope.",
+    "Cancelled and completed reservations do not count toward the limit.",
+    "The limit is enforced per resource: overlapping reservations on different resources are independent.",
+    "Enforcement is correct under concurrent requests: a burst of simultaneous requests never admits more than N overlapping reservations.",
+    "Any schema change is a new, higher-numbered migration file; existing files under internal/store/migrations/ are untouched.",
+    "New tests cover the default, the exact limit boundary (N admitted, N+1 rejected), non-counting of inactive reservations, and the concurrent burst.",
+    "go test ./... and go test -race ./... pass."
+  ],
+  "constraints": [
+    "Follow AGENTS.md conventions: business rules in internal/booking, thin handlers and SQL, structured error envelope, testify/assert, deterministic tests.",
+    "Backward compatibility: existing API requests without the new field must behave exactly as before.",
+    "Do not edit existing migration files."
+  ],
+  "non_goals": [
+    "Per-reservation party sizes or partial-capacity bookings.",
+    "Updating or reflowing existing stored data.",
+    "An endpoint for changing the limit after resource creation.",
+    "Frontend or client changes (bookit is API-only)."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full suite passes, including the new feature tests."
+    },
+    {
+      "kind": "command",
+      "command": "go test -race ./...",
+      "description": "Suite passes as CI runs it, including the concurrent-burst test."
+    },
+    {
+      "kind": "artifact",
+      "description": "Schema changes, if any, appear only as new migration files."
+    }
+  ],
+  "hidden_validation": "grader:bk-012",
+  "baseline_configuration": "E",
+  "time_budget": "time-class-long",
+  "cost_budget": "cost-class-large",
+  "expected_artifacts": [
+    "A diff against the starting revision implementing the feature",
+    "New tests covering the limit semantics and the concurrent burst",
+    "A short design note stating the decisions taken on the known ambiguities",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Limit semantics correct at the boundary and under concurrency",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Defaulting preserves existing behavior exactly (no hidden regressions)",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Domain rule placed in internal/booking; layering and migration rules respected",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Ambiguities resolved explicitly in the design note rather than silently",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "Cost and iteration count proportionate to a small feature",
+      "metric_category": "economic"
+    }
+  ],
+  "known_ambiguities": [
+    "Resources already have a capacity field whose relationship to the new limit is unspecified: reusing it or adding a distinct field are both defensible - decide and justify in the design note.",
+    "How GET /resources/{id}/availability should present slots that are partially booked but still below the limit is unspecified; document the chosen semantics.",
+    "Whether the limit appears in the resource response DTO is open; if it does, it must not break existing clients that reject unknown fields."
+  ],
+  "recommended_context_sources": [
+    "AGENTS.md",
+    "internal/api/reservations.go",
+    "internal/booking/types.go",
+    "internal/booking/availability.go",
+    "internal/store/",
+    "docs/architecture.md"
+  ],
+  "expected_failure_modes": [
+    "Enforcing the limit only sequentially so a concurrent burst exceeds N.",
+    "Changing default behavior for resources created without a limit.",
+    "Editing an existing migration instead of adding a new one."
+  ],
+  "parallelization_opportunities": [
+    "Domain-rule implementation and API/store plumbing can be developed by separate workers once the design note fixes the field semantics."
+  ]
+}

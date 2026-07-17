@@ -1,0 +1,19 @@
+diff --git a/internal/api/reservations.go b/internal/api/reservations.go
+index ba3b11d..0b0a90c 100644
+--- a/internal/api/reservations.go
++++ b/internal/api/reservations.go
+@@ -112,12 +112,8 @@ func (s *Server) handleListReservations(w http.ResponseWriter, r *http.Request)
+ 		return
+ 	}
+ 
+-	offset := page * perPage
+-	first := offset - perPage
+-	last := offset - 1
+-	if first > len(all) {
+-		first = len(all)
+-	}
++	first := (page - 1) * perPage
++	last := first + perPage
+ 	if last > len(all) {
+ 		last = len(all)
+ 	}

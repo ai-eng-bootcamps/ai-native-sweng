@@ -1,0 +1,86 @@
+{
+  "id": "bk-008",
+  "title": "Reconcile the cancellation-cutoff docs",
+  "category": "documentation-correction",
+  "partition": "development",
+  "modules": ["M4"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "A customer complained about being charged a cancellation fee for a booking they cancelled 30 hours in advance - which README.md says should be free. Investigation shows the documentation and the code disagree about the free-cancellation cutoff: the service enforces a 48-hour cutoff (defined in internal/booking), while README.md and docs/architecture.md describe a different number. The code is the source of truth. Correct the documentation so every statement about the cutoff matches the enforced behavior, without changing any code.",
+  "acceptance_criteria": [
+    "The cancellation policy section of README.md states the 48-hour cutoff the code enforces.",
+    "docs/architecture.md states the same 48-hour cutoff.",
+    "No statement contradicting the enforced cutoff remains anywhere in the repository's documentation.",
+    "No Go source file is changed.",
+    "Documentation content unrelated to the cutoff is left untouched.",
+    "go test ./... passes (trivially, since no code changed)."
+  ],
+  "constraints": [
+    "Documentation-only change; the constant in internal/booking is authoritative and must not be edited.",
+    "Preserve the existing style and structure of the documents; correct the facts, do not rewrite the prose."
+  ],
+  "non_goals": [
+    "Changing the enforced cutoff or the fee tiers in code.",
+    "Restructuring or expanding the documentation.",
+    "Documenting the fee tier percentages beyond what the docs already say."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Suite still passes; no code was touched."
+    },
+    {
+      "kind": "artifact",
+      "description": "Diff touches only Markdown documentation files."
+    },
+    {
+      "kind": "command",
+      "command": "git diff --stat -- '*.go'",
+      "description": "No Go file changed (empty output)."
+    }
+  ],
+  "hidden_validation": "grader:bk-008",
+  "baseline_configuration": "C",
+  "time_budget": "time-class-short",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "A documentation-only diff against the starting revision",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Every stale cutoff statement found and corrected; none invented",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Zero code changes and zero unrelated doc changes",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The doc-versus-code conflict was verified against the code before editing",
+      "metric_category": "process"
+    }
+  ],
+  "known_ambiguities": [
+    "Sentences that describe the tier structure without naming the cutoff may or may not need rewording; only statements that contradict the enforced behavior must change.",
+    "Whether to note the correction in CONTRIBUTING.md-style changelogs is open; the repository has no changelog, so no entry is expected."
+  ],
+  "recommended_context_sources": [
+    "internal/booking/policy.go",
+    "README.md",
+    "docs/architecture.md"
+  ],
+  "expected_failure_modes": [
+    "Changing the code to match the docs instead of the docs to match the code.",
+    "Missing the second document that repeats the stale number."
+  ]
+}

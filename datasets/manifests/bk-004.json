@@ -1,0 +1,91 @@
+{
+  "id": "bk-004",
+  "title": "Diagnose the failing DST availability test",
+  "category": "failing-test-diagnosis",
+  "partition": "development",
+  "modules": ["M2", "M8"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "Users report that bookings spanning a daylight-saving-time change come out an hour off. The repository already contains a test suite that pins the expected behavior around a DST transition, kept behind the dst build tag and excluded from regular CI: it runs with 'go test -tags dst ./internal/booking' and currently fails. Diagnose the failure: identify the root cause with file:line evidence, then fix the production code so the planted test passes without modifying the test itself.",
+  "acceptance_criteria": [
+    "A short root-cause report explains why the tagged test fails, with file:line evidence in the production code.",
+    "go test -tags dst ./internal/booking passes.",
+    "internal/booking/dst_test.go is byte-for-byte unmodified.",
+    "go test ./... still passes.",
+    "The fix is confined to the code responsible for the failure; no unrelated changes."
+  ],
+  "constraints": [
+    "The planted test file must not be edited, skipped, or re-tagged.",
+    "Follow AGENTS.md conventions; all times in the API and store remain UTC.",
+    "Do not modify files under internal/store/migrations/."
+  ],
+  "non_goals": [
+    "Adding DST tests beyond the planted suite.",
+    "Moving the dst build tag into regular CI.",
+    "Reworking the availability model beyond what the failure requires."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test -tags dst ./internal/booking",
+      "description": "The planted DST suite passes."
+    },
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "The regular suite still passes."
+    },
+    {
+      "kind": "command",
+      "command": "git diff --stat -- internal/booking/dst_test.go",
+      "description": "The planted test file is unmodified (empty output)."
+    }
+  ],
+  "hidden_validation": "grader:bk-004",
+  "baseline_configuration": "D",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-medium",
+  "expected_artifacts": [
+    "reports/bk-004-root-cause.md: diagnosis with file:line evidence",
+    "A diff against the starting revision fixing the production code",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Root cause is the actual cause, not a co-incidental symptom, and is evidenced by file:line",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Planted test passes unmodified and the regular suite is unbroken",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Diagnosis proceeded from the failing assertion to the code, not by guess-and-patch",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "Fix size is proportional to the defect",
+      "metric_category": "outcome"
+    }
+  ],
+  "known_ambiguities": [
+    "How far the fix should generalize is open: the minimal correct fix that makes the planted suite pass is acceptable; if you find sibling occurrences of the same mistake, report them rather than fixing them all."
+  ],
+  "recommended_context_sources": [
+    "internal/booking/dst_test.go",
+    "internal/booking/availability.go",
+    "AGENTS.md"
+  ],
+  "expected_failure_modes": [
+    "Patching the symptom at the call site instead of the cause.",
+    "A fix that passes the tagged suite but changes regular-suite behavior."
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "bk-007",
+  "title": "Fix the cancel-after-completion transition",
+  "category": "targeted-bug-fixing",
+  "partition": "practice",
+  "modules": ["M3"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "Support has escalated two symptoms around cancellation. First, a reservation that has already completed can still be cancelled through POST /reservations/{id}/cancel, even though completed is supposed to be a terminal state for cancellation purposes. Second, cancelling the same reservation twice records a second cancellation fee in the audit history, so customers appear to be charged (or refunded) twice. Fix the lifecycle rules so completed reservations cannot be cancelled and repeated cancellation is idempotent.",
+  "acceptance_criteria": [
+    "POST /reservations/{id}/cancel on a completed reservation returns HTTP 409 with the structured error envelope and code invalid_transition.",
+    "Repeating cancel on an already-cancelled reservation records no additional audit entry and no additional fee.",
+    "Cancelling from pending and from confirmed still succeeds and applies the cancellation fee exactly once.",
+    "Confirm and complete transitions are unaffected.",
+    "Lifecycle unit tests in internal/booking are extended to pin the allowed and rejected transitions, including the cases above.",
+    "go test ./... passes."
+  ],
+  "constraints": [
+    "The transition rules belong in internal/booking; the handler stays thin per AGENTS.md.",
+    "Audit history remains append-only: fix future behavior, do not rewrite existing entries.",
+    "Do not modify files under internal/store/migrations/."
+  ],
+  "non_goals": [
+    "Refunding or correcting fees already recorded in existing data.",
+    "Adding new lifecycle states or endpoints.",
+    "Changing the fee computation itself."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./internal/booking/",
+      "description": "Extended lifecycle tests pass."
+    },
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full suite passes."
+    }
+  ],
+  "hidden_validation": "grader:bk-007",
+  "baseline_configuration": "D",
+  "time_budget": "time-class-short",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "A diff against the starting revision",
+    "Extended lifecycle tests in internal/booking",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Completed reservations can no longer be cancelled and double-cancel records nothing extra",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The rule lives in the domain layer, not patched into the handler",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The idempotency design decision was surfaced and justified",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "No regressions in the remaining lifecycle transitions",
+      "metric_category": "outcome"
+    }
+  ],
+  "known_ambiguities": [
+    "The response for repeating cancel on an already-cancelled reservation is a design decision: 200 with the current state (no-op) and 409 invalid_transition are both defensible, as long as no second fee or audit entry is recorded - state and justify the choice.",
+    "Whether cancelled should also be unreachable from itself in the domain rule or handled at the endpoint is part of that same decision."
+  ],
+  "recommended_context_sources": [
+    "internal/booking/lifecycle.go",
+    "internal/booking/lifecycle_test.go",
+    "internal/api/reservations.go",
+    "docs/architecture.md"
+  ],
+  "expected_failure_modes": [
+    "Blocking cancel-after-completion but leaving repeat-cancel double-recording in place.",
+    "Fixing only the handler so other callers of the domain rule keep the old behavior."
+  ]
+}

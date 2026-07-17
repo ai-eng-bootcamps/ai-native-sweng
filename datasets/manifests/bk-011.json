@@ -1,0 +1,93 @@
+{
+  "id": "bk-011",
+  "title": "Extract the duplicated overlap check",
+  "category": "targeted-refactoring",
+  "partition": "held-out",
+  "modules": ["evidence-gates", "M8"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "The half-open interval overlap rule - two intervals overlap when each one starts before the other ends - is implemented independently at least three times in bookit: in the reservation-conflict scan of handleCreateReservation (internal/api/reservations.go), in the weekly-window overlap validation of ValidateWindows (internal/booking/types.go), and in the reservation-versus-window comparison inside FreeSlots (internal/booking/availability.go). The duplication has already caused drift risk between admission and availability math. Unify the overlap rule into a single implementation in internal/booking and make all three sites use it, without changing observable behavior.",
+  "acceptance_criteria": [
+    "A single overlap implementation exists in internal/booking with unit tests of its own.",
+    "The reservation-conflict check in internal/api/reservations.go, the window validation in internal/booking/types.go, and the reservation-versus-window comparison in internal/booking/availability.go all delegate to it; no independent restatement of the rule remains at those sites.",
+    "Observable behavior is unchanged: every existing test passes unmodified.",
+    "The package dependency direction is preserved: internal/booking imports nothing from internal/api or internal/store.",
+    "No HTTP API change, no schema change, no change under internal/store/migrations/.",
+    "go test ./... and go test -race ./... pass."
+  ],
+  "constraints": [
+    "Behavior-preserving refactoring only; if you believe a site's boundary semantics are wrong, report it, do not change it here.",
+    "Follow AGENTS.md conventions and the existing naming style of internal/booking.",
+    "Keep the diff proportionate: unify the rule, do not redesign the availability engine."
+  ],
+  "non_goals": [
+    "Fixing any suspected boundary bugs in the existing sites (behavior must be preserved bit-for-bit).",
+    "Generalizing beyond the three named sites.",
+    "Performance tuning of the overlap scan."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Every existing test passes unmodified, plus new unit tests for the extracted rule."
+    },
+    {
+      "kind": "command",
+      "command": "go test -race ./...",
+      "description": "Suite passes as CI runs it."
+    },
+    {
+      "kind": "artifact",
+      "description": "Diff shows the three named sites delegating to one implementation."
+    }
+  ],
+  "hidden_validation": "grader:bk-011",
+  "baseline_configuration": "D",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-medium",
+  "expected_artifacts": [
+    "A diff against the starting revision",
+    "Unit tests for the extracted overlap implementation",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "One rule, three call sites, zero behavior change",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The abstraction fits all three representations without contortion",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Unnecessary-change rate: nothing outside the overlap rule was touched",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Design decision for bridging the differing representations was stated and justified",
+      "metric_category": "process"
+    }
+  ],
+  "known_ambiguities": [
+    "The three sites compare different representations (UTC instants at two sites, minutes-since-midnight at one); whether to unify via a generic helper, conversion to a common representation, or thin wrappers over one core rule is a design decision to justify.",
+    "Where in internal/booking the extracted rule should live (an existing file or a new one) is open."
+  ],
+  "recommended_context_sources": [
+    "internal/api/reservations.go",
+    "internal/booking/types.go",
+    "internal/booking/availability.go",
+    "AGENTS.md"
+  ],
+  "expected_failure_modes": [
+    "Silently flipping an inclusive/exclusive boundary at one site while unifying.",
+    "Inverting the dependency direction by importing api or store types into internal/booking."
+  ]
+}

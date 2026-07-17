@@ -1,0 +1,96 @@
+{
+  "id": "bk-009",
+  "title": "Review a seeded pagination-fix patch",
+  "category": "code-review",
+  "partition": "development",
+  "modules": ["M6", "M8"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "A contributor has proposed a patch that claims to fix the reservation-list pagination symptom (reservations going missing when paging through GET /reservations). The patch is supplied as a unified diff against the starting revision at datasets/development/bk-009/patch.diff in the platform repository. Review it as you would a real pull request: does it fix the symptom, is it correct at the edges, does it follow the repository's conventions, and is it safe to merge as-is? The patch contains at least one seeded defect; your review is expected to find it. Produce a review report whose findings cite file and line in the patched code.",
+  "acceptance_criteria": [
+    "The review report states whether the patch fixes the reported pagination symptom, with reasoning.",
+    "Every finding cites file:line against the patched state of the code.",
+    "The seeded defect in the patch is identified, with its user-visible consequence explained.",
+    "The report ends with a clear recommendation: accept, or request changes with the required changes listed.",
+    "The bookit working tree is left unmodified; any application of the patch happens in a disposable worktree or copy."
+  ],
+  "constraints": [
+    "Review the patch against the starting revision exactly; do not review a rebased or edited variant.",
+    "Applying the patch and running tests in an isolated worktree is allowed and encouraged, but no change may be left behind.",
+    "Findings must be evidenced (file:line, test output, or reproduction), not speculative."
+  ],
+  "non_goals": [
+    "Writing a corrected version of the patch.",
+    "Reviewing pre-existing code the patch does not touch, except where the patch interacts with it.",
+    "Style nitpicks that golangci-lint would not flag and AGENTS.md does not require."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "git apply --check ../../datasets/development/bk-009/patch.diff",
+      "description": "The supplied patch applies cleanly to the starting revision."
+    },
+    {
+      "kind": "artifact",
+      "description": "Review report exists with file:line-cited findings and a recommendation."
+    },
+    {
+      "kind": "command",
+      "command": "git status --porcelain",
+      "description": "The target repository working tree is unchanged after the review (empty output)."
+    }
+  ],
+  "hidden_validation": "grader:bk-009",
+  "baseline_configuration": "C",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "reports/bk-009-review.md: findings with file:line citations and an accept/request-changes recommendation",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "The seeded defect is found and its consequence is described accurately",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Findings are evidenced at file:line and free of hallucinated code",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The review exercised the patch (applied it, ran or reasoned through tests) rather than pattern-matching the diff text",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "No residue left in the target repository",
+      "metric_category": "safety"
+    },
+    {
+      "criterion": "A maintainer could act on the recommendation without re-deriving the analysis",
+      "metric_category": "human-impact"
+    }
+  ],
+  "known_ambiguities": [
+    "The depth of edge-case exploration is open; at minimum, consider what happens across the full range of page and per_page values the API accepts.",
+    "Whether a finding is blocking or advisory is the reviewer's call and must be labeled in the report."
+  ],
+  "recommended_context_sources": [
+    "datasets/development/bk-009/patch.diff",
+    "datasets/development/bk-009/README.md",
+    "internal/api/reservations.go",
+    "internal/api/api_test.go",
+    "AGENTS.md"
+  ],
+  "expected_failure_modes": [
+    "Approving the patch because the happy-path pages look correct.",
+    "Reporting the pre-existing symptom as if it were introduced by the patch."
+  ]
+}

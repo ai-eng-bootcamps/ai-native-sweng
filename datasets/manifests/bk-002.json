@@ -1,0 +1,88 @@
+{
+  "id": "bk-002",
+  "title": "Fix reservation list pagination",
+  "category": "targeted-bug-fixing",
+  "partition": "practice",
+  "modules": ["M0", "M1"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "Users paging through GET /reservations report that reservations go missing: walking every page and concatenating the items yields fewer reservations than the response's total field claims, and the last entry of a page in particular never seems to show up. Fix the reservation listing so that paging through all results returns every matching reservation exactly once, and add a regression test that would have caught the problem.",
+  "acceptance_criteria": [
+    "With more matching reservations than fit on one page, concatenating the items of page 1 through the last page yields every matching reservation exactly once, in the same order the endpoint returns today.",
+    "The total field of the response equals the full number of matching reservations on every page.",
+    "Existing pagination semantics are preserved: pages are 1-indexed, per_page defaults to 20 and is capped at 100.",
+    "Requesting a page past the end of the results returns an empty items array with HTTP 200, not an error.",
+    "A regression test covering multi-page listing is added to the internal/api test suite using testify assertions and fails against the unfixed code.",
+    "go test ./... passes.",
+    "The change is confined to the reservation listing behavior and its tests."
+  ],
+  "constraints": [
+    "Follow AGENTS.md conventions: testify/assert only, structured error envelope, business rules stay out of SQL.",
+    "Do not change the response DTO shape or the query parameters.",
+    "Do not modify files under internal/store/migrations/."
+  ],
+  "non_goals": [
+    "Changing pagination for the resources listing.",
+    "Performance optimization of the listing query.",
+    "Adding new query parameters or cursor-based pagination."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full bookit test suite passes, including the new regression test."
+    },
+    {
+      "kind": "artifact",
+      "description": "Diff touches only the reservation listing code path and its tests."
+    }
+  ],
+  "hidden_validation": "grader:bk-002",
+  "baseline_configuration": "B",
+  "time_budget": "time-class-short",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "A diff against the starting revision fixing the listing behavior",
+    "A new regression test in internal/api",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Every reservation appears exactly once when paging; total stays correct",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The regression test genuinely fails on the unfixed code",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "No unnecessary changes outside the listing path",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Reviewer can understand the fix in under five minutes",
+      "metric_category": "human-impact"
+    }
+  ],
+  "known_ambiguities": [
+    "Whether the fix belongs in the handler or in the store layer is open; keeping SQL thin per AGENTS.md is the guiding convention.",
+    "The regression test may exercise the HTTP handler or the paging logic directly; the HTTP level matches the existing internal/api test style."
+  ],
+  "recommended_context_sources": [
+    "AGENTS.md",
+    "internal/api/reservations.go",
+    "internal/api/api_test.go"
+  ],
+  "expected_failure_modes": [
+    "Fixing one boundary while breaking the out-of-range-page behavior.",
+    "Adding a test that passes both before and after the fix."
+  ]
+}

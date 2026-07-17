@@ -1,0 +1,90 @@
+{
+  "id": "bk-003",
+  "title": "Reject invalid reservation time ranges",
+  "category": "targeted-bug-fixing",
+  "partition": "development",
+  "modules": ["M1", "M3"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "Two related symptoms have been reported against POST /reservations. First, a reservation whose end is at or before its start is accepted, and once stored it corrupts the free-slot computation for the resource. Second, a booking that ends exactly at the resource's closing time is rejected as unavailable even though it fits entirely inside the availability window. Fix reservation admission so that malformed time ranges are rejected with a structured 400 error and legitimate boundary bookings are accepted.",
+  "acceptance_criteria": [
+    "POST /reservations with end equal to start returns HTTP 400 with the structured error envelope and code invalid_request.",
+    "POST /reservations with end before start returns HTTP 400 with the structured error envelope and code invalid_request.",
+    "A reservation ending exactly at the closing time of an availability window (for example 16:00-17:00 in a 09:00-17:00 window) is accepted when the slot is otherwise free.",
+    "A reservation extending past the closing time or starting before the opening time is still rejected with the structured error envelope.",
+    "Slot admission and the free-slot computation of GET /resources/{id}/availability agree at window boundaries: a slot reported free can be booked.",
+    "New tests cover end-equal-to-start, end-before-start, booking up to the exact closing time, and booking past the closing time.",
+    "go test ./... passes."
+  ],
+  "constraints": [
+    "Follow AGENTS.md conventions: validation errors use the structured envelope in internal/api/errors.go; business rules live in internal/booking.",
+    "Do not change the request or response DTO shapes.",
+    "Do not modify files under internal/store/migrations/."
+  ],
+  "non_goals": [
+    "Cleaning up reservations already stored with invalid ranges.",
+    "Validating holder email or other fields beyond the time range.",
+    "Changing how availability windows are defined or stored."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full bookit test suite passes, including the new boundary tests."
+    },
+    {
+      "kind": "command",
+      "command": "go test -race ./...",
+      "description": "Suite passes as CI runs it."
+    }
+  ],
+  "hidden_validation": "grader:bk-003",
+  "baseline_configuration": "D",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "A diff against the starting revision",
+    "New boundary tests in the affected packages",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Malformed ranges rejected, boundary booking accepted, and the two rules do not conflict",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Boundary semantics are consistent between admission and free-slot computation",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Validation placed at the conventional layer (handler validates, domain decides)",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Ambiguities about status-code choices were surfaced rather than silently decided",
+      "metric_category": "process"
+    }
+  ],
+  "known_ambiguities": [
+    "For requests genuinely outside every availability window (as opposed to malformed ranges), the code base currently answers 409 slot_unavailable; whether those become 400 or stay 409 is a design decision - state and justify your choice.",
+    "Whether a zero-length reservation deserves its own error message or the generic invalid-range message is open."
+  ],
+  "recommended_context_sources": [
+    "AGENTS.md",
+    "internal/api/reservations.go",
+    "internal/booking/availability.go",
+    "internal/booking/availability_test.go"
+  ],
+  "expected_failure_modes": [
+    "Accepting the boundary booking in admission while the free-slot output still disagrees.",
+    "Rejecting valid bookings that merely touch an existing reservation end-to-start."
+  ]
+}

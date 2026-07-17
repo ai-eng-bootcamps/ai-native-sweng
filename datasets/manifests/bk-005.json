@@ -1,0 +1,95 @@
+{
+  "id": "bk-005",
+  "title": "Add cancellation-fee tier tests",
+  "category": "test-creation",
+  "partition": "development",
+  "modules": ["M1", "M8"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
+  "starting_revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e",
+  "description": "The cancellation-fee computation - booking.CancellationFee in internal/booking/policy.go - is a deliberate coverage gap: it has no tests at all, even though it decides how much a customer is charged. Write a table-driven test suite that covers the fee computation across all tiers of the default policy and at every boundary, so that any future change to the fee logic is caught.",
+  "acceptance_criteria": [
+    "Table-driven tests for booking.CancellationFee exist in internal/booking using testify/assert.",
+    "A cancellation earlier than the policy cutoff is covered and expects a zero fee.",
+    "Every tier of the default cancellation policy is covered with a lead time inside that tier.",
+    "The exact cutoff boundary is covered: remaining lead time exactly equal to the cutoff.",
+    "Exact tier boundaries are covered: remaining lead time exactly equal to a tier's hours-before value.",
+    "A cancellation after the reservation start (negative lead time) is covered.",
+    "A policy with no tiers is covered.",
+    "A policy whose tiers are supplied in non-sorted order is covered.",
+    "go test ./... passes and no production (non-test) code is modified."
+  ],
+  "constraints": [
+    "testify/assert only; no new test frameworks or assertion libraries.",
+    "Tests must be deterministic: fixed time values, no time.Now or sleeps.",
+    "Production code must not be changed; if the tests reveal what looks like a defect, report it instead of fixing it."
+  ],
+  "non_goals": [
+    "Testing the HTTP cancel endpoint (covered elsewhere).",
+    "Testing policy validation or storage.",
+    "Changing the default policy values."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./internal/booking/",
+      "description": "The new fee-tier tests pass."
+    },
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full suite passes."
+    },
+    {
+      "kind": "artifact",
+      "description": "Diff adds test code only; no production file changed."
+    }
+  ],
+  "hidden_validation": "grader:bk-005",
+  "baseline_configuration": "C",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-small",
+  "expected_artifacts": [
+    "A new test file (or additions to an existing one) in internal/booking",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "All tiers and all boundary lead times of the default policy are exercised",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Table-driven structure matches the existing test style",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "Each case's expected fee is justified by the documented policy semantics, not by copying the implementation's output",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "Review effort: cases are named clearly enough to audit in minutes",
+      "metric_category": "human-impact"
+    }
+  ],
+  "known_ambiguities": [
+    "The expected behavior at exact boundaries (lead time equal to the cutoff; lead time equal to a tier's hours-before value) must be derived from the function's documented contract in internal/booking - state the reading you tested against.",
+    "Whether custom policies beyond the default need coverage is open; the default policy plus the no-tier and unsorted-tier cases is the minimum."
+  ],
+  "recommended_context_sources": [
+    "internal/booking/policy.go",
+    "internal/booking/types.go",
+    "internal/booking/lifecycle_test.go",
+    "AGENTS.md"
+  ],
+  "expected_failure_modes": [
+    "Asserting whatever the implementation currently returns instead of the documented contract.",
+    "Missing the exact-boundary cases and covering only mid-tier lead times."
+  ]
+}
