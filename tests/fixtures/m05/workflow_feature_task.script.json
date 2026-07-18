@@ -1,0 +1,100 @@
+[
+  {
+    "expect_substring": "Acceptance criteria:",
+    "response": {
+      "text": "The task concerns the slug rule. I'll locate its definition to see what the current implementation does.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "search_text",
+          "arguments": { "query": "func Slug" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1620, "output_tokens": 44 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "internal/directory/slug.go",
+    "response": {
+      "text": "The slug rule is defined in internal/directory/slug.go. I'll read it to confirm the current behavior.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "read_file",
+          "arguments": { "path": "internal/directory/slug.go" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1740, "output_tokens": 38 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "strings.ToLower(strings.TrimSpace(name))",
+    "response": {
+      "text": "The slug rule lives in internal/directory/slug.go: Slug trims and lowercases the venue name but never replaces spaces, so a multi-word name like \"Main Hall\" cannot produce the documented \"main-hall\" form. internal/api/venues.go builds directory URL paths from this function and derives nothing itself, so the single change point is the return expression in Slug. The package's tests cover trimming and lowercasing only.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 1960, "output_tokens": 96 },
+      "stop_reason": "end_turn"
+    }
+  },
+  {
+    "expect_substring": "Reply with a numbered implementation plan",
+    "response": {
+      "text": "1. In internal/directory/slug.go, extend the return expression in Slug so the trimmed, lowercased name also has every space replaced with a hyphen.\n2. Inspect the diff to confirm the change is the single documented rule and nothing else.\n3. Leave internal/api/venues.go untouched; it already routes slug derivation to the directory package.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 1410, "output_tokens": 88 },
+      "stop_reason": "end_turn"
+    }
+  },
+  {
+    "expect_substring": "Approved plan:",
+    "response": {
+      "text": "Following the approved plan: extending the return expression in Slug.",
+      "tool_calls": [
+        {
+          "id": "call-3",
+          "name": "replace_text",
+          "arguments": {
+            "path": "internal/directory/slug.go",
+            "old_text": "return strings.ToLower(strings.TrimSpace(name))",
+            "new_text": "return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), \" \", \"-\")"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1580, "output_tokens": 72 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "replaced 1 occurrence in internal/directory/slug.go",
+    "response": {
+      "text": "The edit is in. Inspecting the diff before finishing.",
+      "tool_calls": [
+        {
+          "id": "call-4",
+          "name": "inspect_diff",
+          "arguments": {}
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1650, "output_tokens": 30 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "strings.ReplaceAll",
+    "response": {
+      "text": "Proposed change: internal/directory/slug.go now derives slugs by trimming, lowercasing, and replacing spaces with hyphens, so \"Main Hall\" is addressed as \"main-hall\". The diff is the single return expression in Slug, exactly as planned; internal/api/venues.go is untouched.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 1890, "output_tokens": 74 },
+      "stop_reason": "end_turn"
+    }
+  }
+]

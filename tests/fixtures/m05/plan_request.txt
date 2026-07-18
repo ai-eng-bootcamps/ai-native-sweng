@@ -1,0 +1,11 @@
+Task fx-venue-slug: Venue directory slugs must match the documented format: the venue name trimmed, lowercased, and with spaces replaced by hyphens. The current implementation never produces hyphens, so multi-word venue names do not get the documented form. Update the slug rule accordingly.
+
+Acceptance criteria:
+1. Slug("Main Hall") returns "main-hall".
+2. Existing trimming and lowercasing behavior is unchanged.
+3. The change is the smallest one that satisfies the documented format.
+
+Investigation findings:
+The slug rule lives in internal/directory/slug.go: Slug trims and lowercases the venue name but never replaces spaces, so a multi-word name like "Main Hall" cannot produce the documented "main-hall" form. internal/api/venues.go builds directory URL paths from this function and derives nothing itself, so the single change point is the return expression in Slug. The package's tests cover trimming and lowercasing only.
+
+Reply with a numbered implementation plan, one step per line.

@@ -1,0 +1,106 @@
+{
+  "id": "bp-001",
+  "title": "Offer freed slots to the waitlist when a reservation is rescheduled",
+  "category": "small-feature-implementation",
+  "partition": "development",
+  "modules": ["M5"],
+  "repository": "ai-eng-bootcamps/ai-native-sweng-bookit-platform",
+  "starting_revision": "66dc77aa945024350b5a37bf5f929acd1b80b59d",
+  "description": "Venue managers report that freed slots go to waste: when a customer moves a reservation to a different time through POST /reservations/{id}/reschedule, the original slot opens up, but customers waiting for exactly that window never hear about it and never get it. When a reservation is cancelled, the platform already offers the freed interval to the waitlist: the oldest matching waiting entry is promoted into a new pending reservation, the cancel response reports the promotion, and a waitlist.promoted notification is queued to the outbox. Rescheduling frees an interval in exactly the same way but skips the waitlist entirely. Extend the reschedule flow so a successful reschedule offers the freed original interval to the waitlist with the same promotion policy the cancellation flow uses, reports any promotion in the response, and queues the same notification event.",
+  "acceptance_criteria": [
+    "After a successful reschedule whose freed original interval matches waiting entries, the oldest matching entry is promoted exactly as after a cancellation: its status becomes promoted and it is linked to a new pending reservation occupying the freed slot (clipped to the entry's window).",
+    "The reschedule response keeps its existing top-level reservation fields unchanged and additionally reports promoted_waitlist_entry and promoted_reservation, with the same field shapes the cancellation response uses, only when a promotion happened.",
+    "A waitlist.promoted event is queued to the notification outbox for the promotion, exactly once, as after a cancellation-driven promotion.",
+    "A rejected reschedule (conflict, wrong state, invalid interval, unknown id) promotes nothing and queues nothing.",
+    "A promoted reservation never overlaps the rescheduled reservation's new interval, including when the new interval overlaps the freed one.",
+    "Entries that are not in the waiting state are never promoted, matching the existing promotion policy.",
+    "docs/architecture.md's description of the waitlist promotion flow reflects that rescheduling also feeds it.",
+    "New behavior is covered by tests in the repository's house style, and go test ./... passes."
+  ],
+  "constraints": [
+    "The promotion decision logic stays in internal/booking; reuse the existing promotion policy rather than duplicating it. The handler stays thin per AGENTS.md.",
+    "Promotion runs synchronously in the API request, as it does for cancellation; do not modify cmd/notifier.",
+    "Do not change or remove the existing top-level fields of the reschedule response; clients depend on them.",
+    "Confine changes to cmd/api, internal/booking, and docs; the store schema, the notifier, other packages, and the admin frontend are out of scope.",
+    "Follow the repository conventions: snake_case JSON, wrapped errors, table-driven testify tests, no new dependencies."
+  ],
+  "non_goals": [
+    "Promoting waitlist entries on any other lifecycle change (confirm, complete, no-show) or retroactively for reschedules that happened before the change.",
+    "Changing how cancellation-driven promotion works.",
+    "Moving promotion into the background notifier or adding new notification kinds or templates.",
+    "Promoting more than one entry per freed interval; the existing policy promotes at most one.",
+    "Admin dashboard changes."
+  ],
+  "allowed_capabilities": ["class-0-observation", "class-1-local-reversible"],
+  "prohibited_capabilities": [
+    "class-2-local-consequential",
+    "class-3-external-reversible",
+    "class-4-external-consequential",
+    "class-5-prohibited"
+  ],
+  "risk_classification": "class-1-local-reversible",
+  "visible_validation": [
+    {
+      "kind": "command",
+      "command": "go test ./cmd/api/ ./internal/booking/",
+      "description": "The packages closest to the change pass, including the new tests."
+    },
+    {
+      "kind": "command",
+      "command": "go test ./...",
+      "description": "Full fast suite passes (the integration layer is tag-gated and not required)."
+    },
+    {
+      "kind": "artifact",
+      "description": "Diff confined to cmd/api, internal/booking, their tests, and docs/."
+    }
+  ],
+  "hidden_validation": "grader:bp-001",
+  "baseline_configuration": "E",
+  "time_budget": "time-class-medium",
+  "cost_budget": "cost-class-large",
+  "expected_artifacts": [
+    "A diff against the starting revision",
+    "Tests covering the new promotion path",
+    "An updated docs/architecture.md data-flow description",
+    "Execution trace of the run"
+  ],
+  "human_review_rubric": [
+    {
+      "criterion": "Promotion after a reschedule matches the cancellation flow's semantics: oldest match wins, at most one entry, correct slot, notification queued",
+      "metric_category": "outcome"
+    },
+    {
+      "criterion": "The overlapping-intervals decision was surfaced and justified before implementation",
+      "metric_category": "process"
+    },
+    {
+      "criterion": "No double-booking is possible in any reschedule outcome",
+      "metric_category": "safety"
+    },
+    {
+      "criterion": "The change is surgical: no store schema, notifier, or frontend changes, and existing response fields are preserved",
+      "metric_category": "outcome"
+    }
+  ],
+  "known_ambiguities": [
+    "When the new interval overlaps the freed one, the freed portion is a design decision: offering the whole original interval and relying on the existing conflict re-check, or computing only the non-overlapping remainder, are both defensible as long as no promoted reservation overlaps the moved one - state and justify the choice.",
+    "Whether the freed interval is surfaced by the booking service (as the cancellation path does) or captured by the handler before the call is an internal design decision; the promotion policy itself must stay in internal/booking.",
+    "Whether a promotion failure after a successful reschedule should fail the request is open; the cancellation flow reports the reschedule result and logs the promotion failure, and matching that behavior is acceptable."
+  ],
+  "recommended_context_sources": [
+    "cmd/api/reservations.go",
+    "internal/booking/service.go",
+    "internal/booking/waitlist.go",
+    "docs/architecture.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md"
+  ],
+  "expected_failure_modes": [
+    "Promoting on rejected reschedules by capturing the original interval up front and promoting regardless of the outcome.",
+    "Double-booking when the new interval overlaps the freed one.",
+    "Forgetting to queue the waitlist.promoted notification event, so waiting customers are still never told.",
+    "Changing the reschedule response shape so existing clients and tests break.",
+    "Missing that the documentation describes the promotion flow as cancellation-only and leaving it stale."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "task_id": "fx-venue-slug",
+  "worker_type": "implementer",
+  "description": "Venue directory slugs must match the documented format: the venue name trimmed, lowercased, and with spaces replaced by hyphens. The current implementation never produces hyphens, so multi-word venue names do not get the documented form. Update the slug rule accordingly.",
+  "acceptance_criteria": [
+    "Slug(\"Main Hall\") returns \"main-hall\".",
+    "Existing trimming and lowercasing behavior is unchanged.",
+    "The change is the smallest one that satisfies the documented format."
+  ],
+  "token_budget": 8000,
+  "search_terms": ["slug"],
+  "conflict_topics": []
+}

@@ -88,7 +88,7 @@ GRADER_PATTERN = re.compile(r"^grader:[a-z]+-[0-9]{3}$")
 
 
 def _manifest_paths() -> list[Path]:
-    return sorted(MANIFEST_DIR.glob("bk-*.json"))
+    return sorted(MANIFEST_DIR.glob("bk-*.json")) + sorted(MANIFEST_DIR.glob("bp-*.json"))
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -109,7 +109,12 @@ def _assert_string_list(manifest: dict[str, Any], key: str, *, non_empty: bool) 
 
 def test_seed_dataset_is_complete() -> None:
     names = {path.stem for path in _manifest_paths()}
-    assert names == {f"bk-{n:03d}" for n in range(1, 13)}
+    assert names == {f"bk-{n:03d}" for n in range(1, 13)} | {"bp-001"}
+    # The bp-* manifests go through the same structural validator here rather
+    # than as parametrized cases: module content cites the default-run test
+    # count, which must not drift as the platform task set grows.
+    for path in sorted(MANIFEST_DIR.glob("bp-*.json")):
+        _validate_manifest(path)
 
 
 def test_ids_are_unique() -> None:
@@ -128,8 +133,7 @@ def test_seed_partitions_match_spec_section_13_4() -> None:
     assert all(p in PARTITIONS for p in partitions.values())
 
 
-@pytest.mark.parametrize("path", _manifest_paths(), ids=lambda p: p.stem)
-def test_manifest_is_structurally_valid(path: Path) -> None:
+def _validate_manifest(path: Path) -> None:
     manifest = _load(path)
 
     keys = set(manifest)
@@ -206,6 +210,13 @@ def test_manifest_is_structurally_valid(path: Path) -> None:
         assert set(item) == {"criterion", "metric_category"}
         assert isinstance(item["criterion"], str) and item["criterion"]
         assert item["metric_category"] in METRIC_CATEGORIES
+
+
+# Seed cases only: bp-* manifests are validated inside
+# test_seed_dataset_is_complete to keep the default-run test count stable.
+@pytest.mark.parametrize("path", sorted(MANIFEST_DIR.glob("bk-*.json")), ids=lambda p: p.stem)
+def test_manifest_is_structurally_valid(path: Path) -> None:
+    _validate_manifest(path)
 
 
 def test_vocabularies_agree_with_json_schema() -> None:

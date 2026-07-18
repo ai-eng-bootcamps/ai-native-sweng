@@ -18,6 +18,7 @@ manifest with a hand-rolled structural check so the core stays dependency-free.
 
 - One task per file; the filename stem must equal the `id` field.
 - `id` values are unique across the dataset.
+- The id prefix names the target repository: `bk-NNN` for bookit tasks, `bp-NNN` for bookit-platform tasks.
 - Manifests are student-visible. Descriptions and acceptance criteria describe observable
   symptoms and desired behavior only - never a planted mechanism, expected patch, or
   internal defect-catalog identifier. Anything that would spoil a task lives in the

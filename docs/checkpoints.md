@@ -22,6 +22,8 @@ m00-baseline-complete
 m01-controlled-development-complete
 m02-readonly-agent-complete
 m03-safe-writer-complete
+m04-context-builder-complete
+m05-stateful-workflow-complete
 ```
 
 A milestone is a state you reach, not a branch or tag the course publishes:
