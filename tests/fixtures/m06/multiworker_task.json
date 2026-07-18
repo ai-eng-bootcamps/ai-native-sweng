@@ -1,0 +1,48 @@
+{
+  "task_id": "fx-tag-style",
+  "description": "Venue tags must render consistently across the styling pipeline: normalization trims surrounding whitespace before lowercasing, labels use angle brackets, and badges prefix the rendered label with 'tag:'.",
+  "acceptance_criteria": [
+    "Normalize(\" Jazz \") returns \"jazz\".",
+    "Render(\"jazz\") returns \"<jazz>\".",
+    "Badge(\"<jazz>\") returns \"tag:<jazz>\".",
+    "Each change is the smallest one that satisfies its sub-task."
+  ],
+  "token_budget": 8000,
+  "graph": {
+    "task_id": "fx-tag-style",
+    "nodes": [
+      {
+        "worker_id": "worker-a",
+        "description": "Trim surrounding whitespace in tags.Normalize before lowercasing.",
+        "acceptance_criteria": [
+          "Normalize(\" Jazz \") returns \"jazz\".",
+          "Existing lowercasing behavior is unchanged."
+        ],
+        "owned_paths": ["internal/tags/normalize.go"],
+        "depends_on": [],
+        "search_terms": ["Normalize"]
+      },
+      {
+        "worker_id": "worker-b",
+        "description": "Render labels with angle brackets instead of square brackets.",
+        "acceptance_criteria": ["Render(\"jazz\") returns \"<jazz>\"."],
+        "owned_paths": ["internal/labels/render.go"],
+        "depends_on": [],
+        "search_terms": ["Render"]
+      },
+      {
+        "worker_id": "worker-c",
+        "description": "Prefix badges with 'tag:' instead of 'badge ' so badges carry the rendered label format.",
+        "acceptance_criteria": ["Badge(\"<jazz>\") returns \"tag:<jazz>\"."],
+        "owned_paths": ["internal/badges/badge.go"],
+        "depends_on": ["worker-b"],
+        "search_terms": ["Badge"]
+      }
+    ]
+  },
+  "reviewers": [
+    { "reviewer_id": "reviewer-1", "concern": "correctness" },
+    { "reviewer_id": "reviewer-2", "concern": "tests" },
+    { "reviewer_id": "reviewer-3", "concern": "maintainability" }
+  ]
+}

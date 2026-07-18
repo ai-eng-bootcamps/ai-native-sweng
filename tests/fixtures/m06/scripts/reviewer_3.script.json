@@ -1,0 +1,15 @@
+[
+  {
+    "response": {
+      "text": "The Normalize change reads as intent-obscuring whitespace handling.\nFINDING: {\"category\": \"maintainability\", \"severity\": \"medium\", \"confidence\": \"medium\", \"summary\": \"TrimLeft with a literal space is a fragile way to strip surrounding whitespace.\", \"evidence\": {\"files\": [\"internal/tags/normalize.go\"], \"lines\": [\"7\"], \"tests\": [], \"reasoning\": \"TrimLeft(tag, \\\" \\\") ignores tabs and trailing whitespace; TrimSpace states the surrounding-whitespace intent directly.\"}, \"impact\": \"Future whitespace handling changes are likely to reintroduce this bug class.\", \"recommended_action\": \"Use strings.TrimSpace(tag) before lowercasing.\", \"deduplication_key\": \"tags-normalize-trailing-whitespace\"}\nCONCLUSION: changes_required",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 2090,
+        "output_tokens": 128
+      },
+      "stop_reason": "end_turn"
+    },
+    "expect_substring": "FINDING"
+  }
+]

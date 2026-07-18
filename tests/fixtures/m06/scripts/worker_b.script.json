@@ -1,0 +1,50 @@
+[
+  {
+    "response": {
+      "text": "The change point is internal/labels/render.go: Render wraps the label in square brackets in a single return expression.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 1650,
+        "output_tokens": 46
+      },
+      "stop_reason": "end_turn"
+    },
+    "expect_substring": "Acceptance criteria"
+  },
+  {
+    "response": {
+      "text": "Switching the Render brackets from square to angle.",
+      "tool_calls": [
+        {
+          "id": "call-worker-b-1",
+          "name": "replace_text",
+          "arguments": {
+            "path": "internal/labels/render.go",
+            "old_text": "\treturn \"[\" + label + \"]\"\n",
+            "new_text": "\treturn \"<\" + label + \">\"\n"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 1740,
+        "output_tokens": 58
+      },
+      "stop_reason": "tool_use"
+    },
+    "expect_substring": "Sub-task worker-b"
+  },
+  {
+    "response": {
+      "text": "The edit for worker-b is in place; the change is minimal and scoped to internal/labels/render.go.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 1810,
+        "output_tokens": 30
+      },
+      "stop_reason": "end_turn"
+    }
+  }
+]

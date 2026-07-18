@@ -1,0 +1,15 @@
+[
+  {
+    "response": {
+      "text": "The integrated diff adds no test files for the three changed functions.\nFINDING: {\"category\": \"tests\", \"severity\": \"medium\", \"confidence\": \"low\", \"summary\": \"The changed functions have no accompanying unit tests.\", \"evidence\": {\"files\": [], \"lines\": [], \"tests\": [], \"reasoning\": \"\"}, \"impact\": \"Regressions in tag styling would go unnoticed.\", \"recommended_action\": \"Add unit tests for Normalize, Render, and Badge.\", \"deduplication_key\": \"tag-style-missing-tests\"}\nCONCLUSION: changes_required",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 2080,
+        "output_tokens": 96
+      },
+      "stop_reason": "end_turn"
+    },
+    "expect_substring": "FINDING"
+  }
+]
