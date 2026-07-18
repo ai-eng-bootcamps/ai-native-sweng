@@ -182,32 +182,27 @@ func TestVersionRejectsArgs(t *testing.T) {
 }
 
 func TestSingleArgStubsValidateArgs(t *testing.T) {
-	cases := []struct {
-		cmd    string
-		module int
-	}{
-		{"run-task", 2},
-		{"run-eval", 8},
-		{"replay", 2},
-		{"inspect-trace", 2},
-	}
-	for _, tc := range cases {
-		t.Run(tc.cmd, func(t *testing.T) {
+	cases := []string{"run-task", "run-eval", "replay", "inspect-trace"}
+	for _, cmd := range cases {
+		t.Run(cmd, func(t *testing.T) {
 			ctx := context.Background()
 
 			app, _, _ := newTestApp(t)
-			err := app.Run(ctx, []string{tc.cmd})
-			assert.ErrorContains(t, err, "usage: coursectl "+tc.cmd)
+			err := app.Run(ctx, []string{cmd})
+			assert.ErrorContains(t, err, "usage: coursectl "+cmd)
 
-			err = app.Run(ctx, []string{tc.cmd, "id-1", "id-2"})
-			assert.ErrorContains(t, err, "usage: coursectl "+tc.cmd)
+			err = app.Run(ctx, []string{cmd, "id-1", "id-2"})
+			assert.ErrorContains(t, err, "usage: coursectl "+cmd)
 
-			err = app.Run(ctx, []string{tc.cmd, "--verbose"})
-			assert.ErrorContains(t, err, "usage: coursectl "+tc.cmd)
+			err = app.Run(ctx, []string{cmd, "--verbose"})
+			assert.ErrorContains(t, err, "usage: coursectl "+cmd)
 
-			err = app.Run(ctx, []string{tc.cmd, "some-id"})
+			err = app.Run(ctx, []string{cmd, "some-id"})
 			assert.ErrorContains(t, err, "not implemented in this skeleton")
-			assert.ErrorContains(t, err, fmt.Sprintf("module %d", tc.module))
+			// The stub must not promise a delivery module; it points at the
+			// Python harness workflow instead.
+			assert.NotContains(t, err.Error(), "arrives with module")
+			assert.ErrorContains(t, err, "Python harness")
 		})
 	}
 }
@@ -221,6 +216,7 @@ func TestCleanupValidatesArgs(t *testing.T) {
 
 	err = app.Run(ctx, []string{"cleanup"})
 	assert.ErrorContains(t, err, "not implemented in this skeleton")
+	assert.NotContains(t, err.Error(), "arrives with module")
 }
 
 func TestResetValidatesModuleFlag(t *testing.T) {

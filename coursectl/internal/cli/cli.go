@@ -94,7 +94,8 @@ type command struct {
 
 // commands returns the full command table (spec section 12). Commands not
 // implemented in this skeleton parse and validate their arguments, then
-// return a clear not-implemented error naming the module that brings them.
+// return a clear not-implemented error pointing at the workflow the course
+// actually uses today.
 func commands() []command {
 	return []command{
 		{"setup", "", "verify prerequisites and prepare the workspace/ directory", runSetup},
@@ -102,11 +103,11 @@ func commands() []command {
 		{"reset", "--module <number>", "reset target repositories to a module starting checkpoint", runReset},
 		{"start-lab", "<lab-id>", "prepare the starting state for a lab", runStartLab},
 		{"validate", "<lab-id>", "run the validation checks for a lab", runValidate},
-		{"run-task", "<task-id>", "execute a task from the task dataset", singleArgStub("run-task", "task-id", 2)},
-		{"run-eval", "<evaluation-id>", "run an evaluation and collect its metrics", singleArgStub("run-eval", "evaluation-id", 8)},
-		{"replay", "<run-id>", "replay a captured run from its stored trace", singleArgStub("replay", "run-id", 2)},
-		{"inspect-trace", "<run-id>", "print the structured trace of a run", singleArgStub("inspect-trace", "run-id", 2)},
-		{"cleanup", "", "remove temporary worktrees and stale lab state", noArgStub("cleanup", 3)},
+		{"run-task", "<task-id>", "execute a task from the task dataset", singleArgStub("run-task", "task-id")},
+		{"run-eval", "<evaluation-id>", "run an evaluation and collect its metrics", singleArgStub("run-eval", "evaluation-id")},
+		{"replay", "<run-id>", "replay a captured run from its stored trace", singleArgStub("replay", "run-id")},
+		{"inspect-trace", "<run-id>", "print the structured trace of a run", singleArgStub("inspect-trace", "run-id")},
+		{"cleanup", "", "remove temporary worktrees and stale lab state", noArgStub("cleanup")},
 		{"version", "", "print version, commit, and build date", runVersion},
 	}
 }
@@ -129,30 +130,33 @@ func (a *App) printUsage(w io.Writer) {
 }
 
 // notImplemented is the shared error for skeleton commands. It is explicit
-// on purpose: the tool never fakes behavior it does not have.
-func notImplemented(what string, module int) error {
-	return fmt.Errorf("%s is not implemented in this skeleton; it arrives with module %d of the course", what, module)
+// on purpose: the tool never fakes behavior it does not have, and it does
+// not promise a delivery module - the course currently drives these
+// workflows through the Python harness (uv run), as each module's
+// instructions describe.
+func notImplemented(what string) error {
+	return fmt.Errorf("%s is not implemented in this skeleton; the course currently runs this workflow through the Python harness (uv run) - see your module's instructions", what)
 }
 
 // singleArgStub returns a runner that requires exactly one positional
 // argument and then reports the command as not implemented.
-func singleArgStub(name, argName string, module int) func(context.Context, *App, []string) error {
+func singleArgStub(name, argName string) func(context.Context, *App, []string) error {
 	return func(_ context.Context, _ *App, args []string) error {
 		if len(args) != 1 || args[0] == "" || strings.HasPrefix(args[0], "-") {
 			return fmt.Errorf("usage: coursectl %s <%s>", name, argName)
 		}
-		return notImplemented(fmt.Sprintf("%s %s", name, args[0]), module)
+		return notImplemented(fmt.Sprintf("%s %s", name, args[0]))
 	}
 }
 
 // noArgStub returns a runner that requires no arguments and then reports
 // the command as not implemented.
-func noArgStub(name string, module int) func(context.Context, *App, []string) error {
+func noArgStub(name string) func(context.Context, *App, []string) error {
 	return func(_ context.Context, _ *App, args []string) error {
 		if len(args) != 0 {
 			return fmt.Errorf("usage: coursectl %s", name)
 		}
-		return notImplemented(name, module)
+		return notImplemented(name)
 	}
 }
 

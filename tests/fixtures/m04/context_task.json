@@ -1,0 +1,13 @@
+{
+  "task_id": "fx-hold-lifetime",
+  "worker_type": "implementer",
+  "description": "A support ticket reports that a resource freed up earlier than the README says it should. Determine the hold lifetime the code actually enforces, and identify every document whose statement about hold expiry disagrees with the enforced behavior.",
+  "acceptance_criteria": [
+    "The enforced hold lifetime is identified from the code, with a file citation.",
+    "Every document statement that disagrees with the enforced lifetime is listed.",
+    "No file is modified; this is an investigation."
+  ],
+  "token_budget": 6000,
+  "search_terms": ["hold", "expire"],
+  "conflict_topics": ["minutes"]
+}

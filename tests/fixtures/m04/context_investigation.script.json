@@ -1,0 +1,44 @@
+[
+  {
+    "expect_substring": "Known instruction conflicts",
+    "response": {
+      "text": "The packet reports a conflict between README.md and docs/architecture.md about the hold lifetime. The enforced behavior lives in code, so I'll locate the constant that pins it.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "search_text",
+          "arguments": { "query": "HoldTTLMinutes" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1480, "output_tokens": 52 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "internal/booking/hold.go",
+    "response": {
+      "text": "The constant is declared in internal/booking/hold.go. I'll read the file to confirm the enforced value and how it is applied.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "read_file",
+          "arguments": { "path": "internal/booking/hold.go" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 1610, "output_tokens": 40 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "const HoldTTLMinutes = 30",
+    "response": {
+      "text": "The enforced hold lifetime is 30 minutes: internal/booking/hold.go pins HoldTTLMinutes to 30 and ExpiresAt applies it. docs/architecture.md states the same 30-minute lifetime, so it matches the enforced behavior. README.md states that holds expire after 15 minutes, which disagrees with the enforced behavior; it is the only document statement that needs correction. No files were modified.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 1890, "output_tokens": 96 },
+      "stop_reason": "end_turn"
+    }
+  }
+]
