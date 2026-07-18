@@ -1,0 +1,15 @@
+[
+  {
+    "response": {
+      "text": "The finding recommends strings.TrimSpace, but I cannot verify the downstream label and badge callers tolerate the change from this context; making no edit rather than an unverified one.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 2040,
+        "output_tokens": 44
+      },
+      "stop_reason": "end_turn"
+    },
+    "expect_substring": "Normalize"
+  }
+]
