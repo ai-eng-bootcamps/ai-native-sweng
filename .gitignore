@@ -29,3 +29,4 @@ htmlcov/
 traces/*
 !traces/examples/
 !traces/m02/
+!traces/m03/

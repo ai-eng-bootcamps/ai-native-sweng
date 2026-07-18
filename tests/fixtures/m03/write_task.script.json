@@ -1,0 +1,96 @@
+[
+  {
+    "expect_substring": "NormalizeHolderEmail",
+    "response": {
+      "text": "I'll read the normalization function to see its current behavior.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "read_file",
+          "arguments": { "path": "internal/booking/holder.go" }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 118, "output_tokens": 26 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "return strings.TrimSpace(email)",
+    "response": {
+      "text": "The function only trims. I'll make it lowercase the trimmed address as documented.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "replace_text",
+          "arguments": {
+            "path": "internal/booking/holder.go",
+            "old_text": "return strings.TrimSpace(email)",
+            "new_text": "return strings.ToLower(strings.TrimSpace(email))"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 214, "output_tokens": 58 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "replaced 1 occurrence in internal/booking/holder.go",
+    "response": {
+      "text": "I'll run the formatter over the worktree to make sure the file stays formatted.",
+      "tool_calls": [
+        {
+          "id": "call-3",
+          "name": "run_validation_command",
+          "arguments": { "command": ["gofmt", "-w", "."] }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 276, "output_tokens": 34 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "policy: allow_with_validation (mutating)",
+    "response": {
+      "text": "The in-place formatter is a mutating command, so the policy will not run it here. My one-line edit does not change formatting, so I'll inspect the diff instead.",
+      "tool_calls": [
+        {
+          "id": "call-4",
+          "name": "inspect_diff",
+          "arguments": {}
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 340, "output_tokens": 52 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "strings.ToLower(strings.TrimSpace(email))",
+    "response": {
+      "text": "The diff touches only NormalizeHolderEmail. I'll run the approved whitespace check as validation evidence.",
+      "tool_calls": [
+        {
+          "id": "call-5",
+          "name": "run_validation_command",
+          "arguments": { "command": ["git", "diff", "--check"] }
+        }
+      ],
+      "structured_output": null,
+      "usage": { "input_tokens": 452, "output_tokens": 40 },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "(exit 0, no output)",
+    "response": {
+      "text": "Proposed change: internal/booking/holder.go now lowercases the trimmed holder email in NormalizeHolderEmail, matching the documented canonical form. The diff touches only that function, the policy denied the mutating formatter run, and the approved whitespace check passed inside the sandbox. The change is ready for validation and approval as a patch; nothing is merged.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": { "input_tokens": 512, "output_tokens": 92 },
+      "stop_reason": "end_turn"
+    }
+  }
+]

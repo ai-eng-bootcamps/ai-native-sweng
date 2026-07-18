@@ -21,6 +21,7 @@ Across the course you build the harness in your own copy of this repository
 m00-baseline-complete
 m01-controlled-development-complete
 m02-readonly-agent-complete
+m03-safe-writer-complete
 ```
 
 A milestone is a state you reach, not a branch or tag the course publishes:
