@@ -26,6 +26,7 @@ m04-context-builder-complete
 m05-stateful-workflow-complete
 m06-multiworker-complete
 m07-reliability-complete
+m08-evaluation-complete
 ```
 
 A milestone is a state you reach, not a branch or tag the course publishes:

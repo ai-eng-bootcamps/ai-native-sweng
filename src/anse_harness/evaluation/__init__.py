@@ -1,1 +1,159 @@
-"""Evaluation harness: repeatable tasks, graders, metrics, configuration comparison (spec 7.12)."""
+"""Evaluation harness: repeatable tasks, graders, metrics, configuration comparison (spec 7.12).
+
+One successful demonstration cannot establish that an agentic system is useful,
+reliable, safe, or cost-effective (blueprint section 25). This package turns the
+Module 2-7 runtimes into a measurement instrument WITHOUT modifying them: attempts run
+through the unchanged loops, engines, and orchestrators; the evaluation layer owns the
+dataset, the reset discipline, the graders, the metrics, and the report.
+
+The honesty doctrine this package operationalizes: every metric knows its measurement
+category (canonical section 7) and its execution mode; scripted/replay repetitions are
+identical by construction and are never presented as measured distributions;
+infrastructure failures are never scored as task failures; grader identity and version
+travel with every result; held-out tasks never surface by default. Evaluation
+bookkeeping lives in run records and report artifacts - not in new trace event types.
+"""
+
+from anse_harness.evaluation.dataset import (
+    HELD_OUT_PARTITION,
+    MANIFEST_SCHEMA_FILENAME,
+    PARTITIONS,
+    DatasetDescriptor,
+    DatasetError,
+    TaskManifest,
+    load_dataset,
+    load_manifests,
+)
+from anse_harness.evaluation.graders import (
+    GRADE_FAIL,
+    GRADE_INFRASTRUCTURE,
+    GRADE_PASS,
+    MODEL_GRADER_SYSTEM_PROMPT,
+    VERDICT_PREFIX,
+    CommandGrader,
+    Grader,
+    GraderResult,
+    ModelAssistedGrader,
+    VisibleValidationGrader,
+    grader_version_hash,
+    infrastructure_result,
+    result_from_exit_code,
+)
+from anse_harness.evaluation.inspect import (
+    TIMING_TEXT_TOKEN,
+    RunInspection,
+    filter_events,
+    inspect_run,
+    normalize_check_payload,
+    normalize_timing_text,
+)
+from anse_harness.evaluation.metrics import (
+    CostAttribution,
+    TaskConfigSummary,
+    attribute_costs,
+    summarize_runs,
+    trace_duration_seconds,
+    trace_tool_calls,
+)
+from anse_harness.evaluation.report import (
+    CLAIM_CHECKLIST_FIELDS,
+    DETERMINISTIC_MODE_NOTE,
+    LIVE_MODE_NOTE,
+    METRIC_CATEGORIES,
+    MODE_LABELS,
+    ClaimChecklist,
+    ComparisonMatrix,
+    EvaluationReport,
+    build_evaluation_report,
+    comparison_matrix,
+    matrix_from_comparison_report,
+)
+from anse_harness.evaluation.runner import (
+    EVAL_WORKFLOW_ID,
+    EVALUATION_MODES,
+    INFRASTRUCTURE_CLASSES,
+    RUN_STATUSES,
+    AttemptExecutor,
+    AttemptOutcome,
+    AttemptRequest,
+    EvalConfiguration,
+    EvalMatrix,
+    EvalTask,
+    EvaluationError,
+    EvaluationRunner,
+    RunRecord,
+    attempt_trace_filename,
+    eval_run_id,
+    fresh_clone,
+    patch_sha256,
+    read_run_records,
+    write_run_records,
+    write_task_executor,
+)
+
+__all__ = [
+    "CLAIM_CHECKLIST_FIELDS",
+    "DETERMINISTIC_MODE_NOTE",
+    "EVALUATION_MODES",
+    "EVAL_WORKFLOW_ID",
+    "GRADE_FAIL",
+    "GRADE_INFRASTRUCTURE",
+    "GRADE_PASS",
+    "HELD_OUT_PARTITION",
+    "INFRASTRUCTURE_CLASSES",
+    "LIVE_MODE_NOTE",
+    "MANIFEST_SCHEMA_FILENAME",
+    "METRIC_CATEGORIES",
+    "MODEL_GRADER_SYSTEM_PROMPT",
+    "MODE_LABELS",
+    "PARTITIONS",
+    "RUN_STATUSES",
+    "TIMING_TEXT_TOKEN",
+    "VERDICT_PREFIX",
+    "AttemptExecutor",
+    "AttemptOutcome",
+    "AttemptRequest",
+    "ClaimChecklist",
+    "CommandGrader",
+    "ComparisonMatrix",
+    "CostAttribution",
+    "DatasetDescriptor",
+    "DatasetError",
+    "EvalConfiguration",
+    "EvalMatrix",
+    "EvalTask",
+    "EvaluationError",
+    "EvaluationReport",
+    "EvaluationRunner",
+    "Grader",
+    "GraderResult",
+    "ModelAssistedGrader",
+    "RunInspection",
+    "RunRecord",
+    "TaskConfigSummary",
+    "TaskManifest",
+    "VisibleValidationGrader",
+    "attempt_trace_filename",
+    "attribute_costs",
+    "build_evaluation_report",
+    "comparison_matrix",
+    "eval_run_id",
+    "filter_events",
+    "fresh_clone",
+    "grader_version_hash",
+    "infrastructure_result",
+    "inspect_run",
+    "load_dataset",
+    "load_manifests",
+    "matrix_from_comparison_report",
+    "normalize_check_payload",
+    "normalize_timing_text",
+    "patch_sha256",
+    "read_run_records",
+    "result_from_exit_code",
+    "summarize_runs",
+    "trace_duration_seconds",
+    "trace_tool_calls",
+    "write_run_records",
+    "write_task_executor",
+]

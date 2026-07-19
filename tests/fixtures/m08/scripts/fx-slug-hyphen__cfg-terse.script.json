@@ -1,0 +1,38 @@
+[
+  {
+    "expect_substring": "spaces replaced by hyphens",
+    "response": {
+      "text": "Replacing spaces with hyphens in the slug rule.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "replace_text",
+          "arguments": {
+            "path": "internal/directory/slug.go",
+            "old_text": "return strings.ToLower(strings.TrimSpace(name))",
+            "new_text": "return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), \" \", \"-\")"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 168,
+        "output_tokens": 66
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "replaced",
+    "response": {
+      "text": "Done: Slug in internal/directory/slug.go now replaces spaces with hyphens after trimming and lowercasing.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 246,
+        "output_tokens": 32
+      },
+      "stop_reason": "end_turn"
+    }
+  }
+]

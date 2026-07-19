@@ -1,0 +1,6 @@
+{
+  "dataset_id": "m08-lab",
+  "description": "Module 8 lab dataset: the graded development-partition bookit tasks. Declared as an explicit id list (not a module-tag filter) so the evaluation's task set is reviewable and stable; validated against datasets/manifests/ at load time. bk-011 is held-out and is deliberately NOT listed here - the held-out partition surfaces only through an explicit, visible decision.",
+  "task_ids": ["bk-003", "bk-004", "bk-005", "bk-006", "bk-009", "bk-010"],
+  "expected_partition": "development"
+}

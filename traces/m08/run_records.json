@@ -1,0 +1,72 @@
+{
+  "records": [
+    {
+      "task_id": "fx-slug-hyphen",
+      "config_id": "cfg-guided",
+      "baseline": "D",
+      "repetition": 1,
+      "mode": "scripted",
+      "status": "completed",
+      "graded_pass": true,
+      "failure_class": null,
+      "grader_id": "fx-slug-hyphen",
+      "grader_version": "1c09f3cef7f9",
+      "cost_usd": 0.00762,
+      "duration_seconds": 0.222602,
+      "tool_calls": 3,
+      "patch_sha256": "a6984bac7b00626834638b276200ce97de11b8e4aaeba06d02b26c88ad3954a8",
+      "trace_ref": "fx-slug-hyphen__cfg-guided__r1.jsonl"
+    },
+    {
+      "task_id": "fx-slug-hyphen",
+      "config_id": "cfg-terse",
+      "baseline": "D",
+      "repetition": 1,
+      "mode": "scripted",
+      "status": "completed",
+      "graded_pass": true,
+      "failure_class": null,
+      "grader_id": "fx-slug-hyphen",
+      "grader_version": "1c09f3cef7f9",
+      "cost_usd": 0.002712,
+      "duration_seconds": 0.212912,
+      "tool_calls": 1,
+      "patch_sha256": "a6984bac7b00626834638b276200ce97de11b8e4aaeba06d02b26c88ad3954a8",
+      "trace_ref": "fx-slug-hyphen__cfg-terse__r1.jsonl"
+    },
+    {
+      "task_id": "fx-slug-tests",
+      "config_id": "cfg-guided",
+      "baseline": "D",
+      "repetition": 1,
+      "mode": "scripted",
+      "status": "completed",
+      "graded_pass": true,
+      "failure_class": null,
+      "grader_id": "fx-slug-tests",
+      "grader_version": "77e79ed42bbf",
+      "cost_usd": 0.007455,
+      "duration_seconds": 0.207217,
+      "tool_calls": 2,
+      "patch_sha256": "23d93c997b308e87deb5a07b2865644e98a824c45533b8d5206746b6f9e6383b",
+      "trace_ref": "fx-slug-tests__cfg-guided__r1.jsonl"
+    },
+    {
+      "task_id": "fx-slug-tests",
+      "config_id": "cfg-terse",
+      "baseline": "D",
+      "repetition": 1,
+      "mode": "scripted",
+      "status": "completed",
+      "graded_pass": false,
+      "failure_class": "implementation failure",
+      "grader_id": "fx-slug-tests",
+      "grader_version": "77e79ed42bbf",
+      "cost_usd": 0.00342,
+      "duration_seconds": 0.214665,
+      "tool_calls": 1,
+      "patch_sha256": "ad2cee017b84f2a029bd21e23bacdc535fe31e36e08a1cd1ec1ad6728d32ade3",
+      "trace_ref": "fx-slug-tests__cfg-terse__r1.jsonl"
+    }
+  ]
+}

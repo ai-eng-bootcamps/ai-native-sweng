@@ -1,0 +1,37 @@
+[
+  {
+    "expect_substring": "all-uppercase name",
+    "response": {
+      "text": "Adding a slug test for an uppercase name.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "create_file",
+          "arguments": {
+            "path": "internal/directory/slug_more_test.go",
+            "content": "package directory\n\nimport \"testing\"\n\nfunc TestSlugLowercasesAllCaps(t *testing.T) {\n\tif got := Slug(\"LOFT\"); got != \"loft\" {\n\t\tt.Fatalf(\"Slug(%q) = %q, want %q\", \"LOFT\", got, \"loft\")\n\t}\n}\n"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 160,
+        "output_tokens": 110
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "created internal/directory/slug_more_test.go",
+    "response": {
+      "text": "Done: added internal/directory/slug_more_test.go covering the uppercase case.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 300,
+        "output_tokens": 26
+      },
+      "stop_reason": "end_turn"
+    }
+  }
+]

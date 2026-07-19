@@ -1,0 +1,39 @@
+{
+  "matrix_id": "m08-fixture-matrix",
+  "mode": "scripted",
+  "tasks": [
+    {
+      "task_id": "fx-slug-hyphen",
+      "description": "Venue directory slugs must match the documented format: the venue name trimmed, lowercased, and with spaces replaced by hyphens. The current implementation never produces hyphens. Update the slug rule in internal/directory/slug.go accordingly; change nothing else.",
+      "grader_id": "fx-slug-hyphen",
+      "validation_commands": [
+        ["go", "test", "-count=1", "./..."],
+        ["git", "diff", "--check"]
+      ]
+    },
+    {
+      "task_id": "fx-slug-tests",
+      "description": "Extend the venue slug unit tests in internal/directory: cover a name padded with tabs and spaces, and an all-uppercase name. Add tests only; do not change production code.",
+      "grader_id": "fx-slug-tests",
+      "validation_commands": [
+        ["go", "test", "-count=1", "./..."],
+        ["git", "diff", "--check"]
+      ]
+    }
+  ],
+  "configurations": [
+    {
+      "config_id": "cfg-guided",
+      "baseline": "D",
+      "description": "Bounded write agent (Module 3 loop) with a guided task prompt.",
+      "prompt_template": "{description}\n\nGuidance: read the relevant files first, make the smallest change that satisfies the task, inspect your diff before finishing, and cover every case the task names."
+    },
+    {
+      "config_id": "cfg-terse",
+      "baseline": "D",
+      "description": "Bounded write agent (Module 3 loop) with the bare task text.",
+      "prompt_template": "{description}"
+    }
+  ],
+  "repetitions": 1
+}

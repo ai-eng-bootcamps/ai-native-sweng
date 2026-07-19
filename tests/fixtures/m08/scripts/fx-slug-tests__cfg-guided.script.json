@@ -1,0 +1,58 @@
+[
+  {
+    "expect_substring": "cover every case the task names",
+    "response": {
+      "text": "I'll read the existing slug tests first so the additions match their style.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "read_file",
+          "arguments": {
+            "path": "internal/directory/slug_test.go"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 205,
+        "output_tokens": 30
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "TestSlugTrims",
+    "response": {
+      "text": "The existing tests cover lowercasing and space trimming. The task names two uncovered cases: tab-and-space padding, and an all-uppercase name. I'll add both in the same table-free style.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "create_file",
+          "arguments": {
+            "path": "internal/directory/slug_more_test.go",
+            "content": "package directory\n\nimport \"testing\"\n\nfunc TestSlugTrimsTabPadding(t *testing.T) {\n\tif got := Slug(\"\\t Ballroom \\t\"); got != \"ballroom\" {\n\t\tt.Fatalf(\"Slug(%q) = %q, want %q\", \"\\t Ballroom \\t\", got, \"ballroom\")\n\t}\n}\n\nfunc TestSlugLowercasesAllCaps(t *testing.T) {\n\tif got := Slug(\"LOFT\"); got != \"loft\" {\n\t\tt.Fatalf(\"Slug(%q) = %q, want %q\", \"LOFT\", got, \"loft\")\n\t}\n}\n"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 350,
+        "output_tokens": 190
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "created internal/directory/slug_more_test.go",
+    "response": {
+      "text": "I added internal/directory/slug_more_test.go with TestSlugTrimsTabPadding (a tab-and-space padded name) and TestSlugLowercasesAllCaps (an all-uppercase name). No production code changed.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 560,
+        "output_tokens": 54
+      },
+      "stop_reason": "end_turn"
+    }
+  }
+]

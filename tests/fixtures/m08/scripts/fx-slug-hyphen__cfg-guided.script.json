@@ -1,0 +1,78 @@
+[
+  {
+    "expect_substring": "spaces replaced by hyphens",
+    "response": {
+      "text": "The task concerns the slug rule. I'll read its implementation before changing anything.",
+      "tool_calls": [
+        {
+          "id": "call-1",
+          "name": "read_file",
+          "arguments": {
+            "path": "internal/directory/slug.go"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 210,
+        "output_tokens": 34
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "return strings.ToLower(strings.TrimSpace(name))",
+    "response": {
+      "text": "The rule trims and lowercases but never hyphenates. I'll extend the return expression with the documented space-to-hyphen replacement.",
+      "tool_calls": [
+        {
+          "id": "call-2",
+          "name": "replace_text",
+          "arguments": {
+            "path": "internal/directory/slug.go",
+            "old_text": "return strings.ToLower(strings.TrimSpace(name))",
+            "new_text": "return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), \" \", \"-\")"
+          }
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 340,
+        "output_tokens": 78
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "replaced",
+    "response": {
+      "text": "Before finishing I'll inspect the diff to confirm the change is exactly the documented rule.",
+      "tool_calls": [
+        {
+          "id": "call-3",
+          "name": "inspect_diff",
+          "arguments": {}
+        }
+      ],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 415,
+        "output_tokens": 40
+      },
+      "stop_reason": "tool_use"
+    }
+  },
+  {
+    "expect_substring": "ReplaceAll",
+    "response": {
+      "text": "I updated Slug in internal/directory/slug.go so the trimmed, lowercased name also has every space replaced with a hyphen, giving multi-word venues the documented main-hall form. The diff touches only that return expression.",
+      "tool_calls": [],
+      "structured_output": null,
+      "usage": {
+        "input_tokens": 505,
+        "output_tokens": 62
+      },
+      "stop_reason": "end_turn"
+    }
+  }
+]
