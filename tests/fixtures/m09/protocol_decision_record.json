@@ -1,0 +1,15 @@
+{
+  "artifact_type": "protocol_decision_record",
+  "capability": "repository-search capability consumed by the harness",
+  "chosen": "mcp",
+  "justifications": [
+    "reusable_capability_discovery",
+    "ecosystem_interoperability",
+    "process_isolation"
+  ],
+  "rejected_alternatives": [
+    "direct_function_call",
+    "local_process"
+  ],
+  "rationale": "The repository-search capability is exposed to any MCP host, not only this harness, so a discoverable, interoperable protocol boundary is justified over an ordinary in-process interface. MCP advertises the tool and its input schema through tools/list, lets an unrelated host consume the same server, and isolates the capability in its own process. A direct function call or a private local-process interface would tie the capability to this one caller and give up discovery and interoperability."
+}

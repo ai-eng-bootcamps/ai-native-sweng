@@ -1,0 +1,10 @@
+{
+  "feature/healthz": {
+    "state": "success",
+    "total_count": 2,
+    "statuses": [
+      {"context": "build", "state": "success"},
+      {"context": "test", "state": "success"}
+    ]
+  }
+}

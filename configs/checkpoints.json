@@ -1,5 +1,5 @@
 {
-  "note": "Module -> target-repository checkpoint map (spec 17-18). coursectl resets target repositories BY REVISION using this file as the source of truth; git tags are intentionally not used. Add a module by adding its key; point a module at a different target by changing its repository/revision. Modules 0-4 map to bookit at its baseline revision; module 5 maps to bookit-platform at its baseline revision; module 6 maps to bookit for its review-practice task, pending the module's lab target decision; module 7 maps to bookit-platform (the reliability lab re-runs platform tasks under injected failures); module 8 maps to bookit (the evaluation lab's task dataset targets bookit, the fast, resettable target - the eval runner makes its own fresh clones per run on top of this baseline).",
+  "note": "Module -> target-repository checkpoint map (spec 17-18). coursectl resets target repositories BY REVISION using this file as the source of truth; git tags are intentionally not used. Add a module by adding its key; point a module at a different target by changing its repository/revision. Modules 0-4 map to bookit at its baseline revision; module 5 maps to bookit-platform at its baseline revision; module 6 maps to bookit for its review-practice task, pending the module's lab target decision; module 7 maps to bookit-platform (the reliability lab re-runs platform tasks under injected failures); module 8 maps to bookit (the evaluation lab's task dataset targets bookit, the fast, resettable target - the eval runner makes its own fresh clones per run on top of this baseline); module 9 maps to bookit-platform (the integration lab prepares a draft pull request for a bookit-platform change; committed integration runs execute offline against a local double, so no live target is touched on setup).",
   "modules": {
     "0": {
       "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
@@ -36,6 +36,10 @@
     "8": {
       "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
       "revision": "51469d2d86aca586ad598f03b6580ff29a1d6f8e"
+    },
+    "9": {
+      "repository": "ai-eng-bootcamps/ai-native-sweng-bookit-platform",
+      "revision": "66dc77aa945024350b5a37bf5f929acd1b80b59d"
     }
   }
 }

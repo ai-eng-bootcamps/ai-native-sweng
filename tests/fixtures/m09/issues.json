@@ -1,0 +1,16 @@
+[
+  {
+    "number": 7,
+    "title": "Add a /healthz readiness endpoint",
+    "body": "The service exposes no readiness probe, so orchestrators cannot tell when it is ready to serve.",
+    "labels": ["enhancement"],
+    "state": "open"
+  },
+  {
+    "number": 8,
+    "title": "Duplicate: readiness probe missing",
+    "body": "There is no health endpoint. (Looks like the same request as #7.)",
+    "labels": ["enhancement"],
+    "state": "open"
+  }
+]
