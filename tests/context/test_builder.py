@@ -136,3 +136,26 @@ def test_stale_marking_against_a_moved_revision() -> None:
     stale = stale_paths(packet, "rev-b")
     assert set(stale) == set(packet.provenance.freshness)
     assert list(stale) == sorted(stale)
+
+
+def test_build_context_packet_tolerates_a_non_utf8_file(tmp_path: Path) -> None:
+    # A real repository can hold a binary or non-UTF-8 file; building a packet over it must
+    # not crash. Repo file reads tolerate undecodable bytes, matching the search layer.
+    import shutil
+
+    repo = tmp_path / "repo"
+    shutil.copytree(FIXTURE_REPO, repo)
+    (repo / "hold_expire_blob.go").write_bytes(b"package x\n// hold expire lifetime \xff\xfe\x80\n")
+    packet = build_context_packet(
+        repo,
+        revision="rev-a",
+        task_id="fx-hold-lifetime",
+        task_description="Determine the hold lifetime the code enforces.",
+        acceptance_criteria=("crit-a", "crit-b"),
+        worker_type="implementer",
+        token_budget=20000,
+        search_terms=("hold", "expire"),
+        conflict_topics=("minutes",),
+        clock=lambda: PINNED_CLOCK,
+    )
+    assert packet.provenance  # built without crashing on the non-UTF-8 file
