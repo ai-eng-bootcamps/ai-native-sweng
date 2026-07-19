@@ -97,3 +97,32 @@ def test_credential_never_reaches_request_subprocess_or_trace(tmp_path: Path) ->
     assert REDACTED in raw
     (event,) = read_trace(trace_path)
     assert event.payload["attempted"]["github_token"] == REDACTED
+
+
+def test_env_filter_is_wired_into_a_real_subprocess_spawn(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The filter is not only a function to call - it must be APPLIED at the spawn site, so a
+    # credential in the harness's own environment never reaches a subprocess the harness
+    # launches (Lesson 10.3). A spawn that inherits os.environ (env=None) fails this test.
+    import subprocess
+
+    from anse_harness.tools.run_read_only_command import RunReadOnlyCommandTool
+
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+    captured: list[dict[str, str] | None] = []
+
+    def spy(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured.append(kwargs.get("env"))  # type: ignore[arg-type]
+        return subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr("anse_harness.tools.run_read_only_command.subprocess.run", spy)
+    RunReadOnlyCommandTool(tmp_path).run({"command": ["git", "status", "--porcelain"]})
+
+    assert captured, "the harness never spawned a subprocess"
+    child_env = captured[-1]
+    assert child_env is not None, (
+        "the spawn must pass an explicit filtered env, not inherit os.environ"
+    )
+    assert "AWS_SECRET_ACCESS_KEY" not in child_env
+    assert set(child_env).issubset(DEFAULT_ENV_ALLOWLIST)
