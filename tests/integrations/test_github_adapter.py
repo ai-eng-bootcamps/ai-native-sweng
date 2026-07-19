@@ -148,6 +148,25 @@ def test_rejected_approval_blocks_the_create(tmp_path: Path) -> None:
     assert audits and audits[0].approved is False and audits[0].outcome == "rejected"
 
 
+def test_transport_failure_on_send_still_audits_and_reraises(tmp_path: Path) -> None:
+    double = _double()
+    double.raise_timeout = True  # the send raises AFTER approval, at the transport
+    trace = tmp_path / "failed.jsonl"
+    with TraceWriter(trace) as writer:
+        adapter = _adapter(double, writer=writer)
+        with pytest.raises(IntegrationError) as excinfo:
+            adapter.create_draft_pr(**_CREATE_KW)
+    assert excinfo.value.retryable is True  # the Module 7 taxonomy survives the audit
+    # An approved-but-failed send still leaves an audit record (outcome "failed"),
+    # exactly as the rejected and cancelled paths do.
+    audits = [
+        ExternalActionAudit.from_payload(event.payload)
+        for event in read_trace(trace)
+        if event.event_type == "artifact_created"
+    ]
+    assert audits and audits[0].approved is True and audits[0].outcome == "failed"
+
+
 def test_audit_record_is_complete_and_credential_free(tmp_path: Path) -> None:
     double = _double()
     trace = tmp_path / "audit.jsonl"

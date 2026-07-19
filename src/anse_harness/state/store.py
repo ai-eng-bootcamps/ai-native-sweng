@@ -37,7 +37,7 @@ from typing import Any
 from anse_harness.workflows.state import WorkflowState
 
 #: Snapshot filename shape; the four-digit version keeps lexical and numeric order equal.
-_SNAPSHOT_PATTERN = re.compile(r"^state-v(\d{4})\.json$")
+_SNAPSHOT_PATTERN = re.compile(r"^state-v(\d{4,})\.json$")
 
 
 class StateStoreError(Exception):
