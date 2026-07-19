@@ -1,5 +1,5 @@
 {
-  "note": "Module -> target-repository checkpoint map (spec 17-18). coursectl resets target repositories BY REVISION using this file as the source of truth; git tags are intentionally not used. Add a module by adding its key; point a module at a different target by changing its repository/revision. Modules 0-4 map to bookit at its baseline revision; module 5 maps to bookit-platform at its baseline revision; module 6 maps to bookit for its review-practice task, pending the module's lab target decision; module 7 maps to bookit-platform (the reliability lab re-runs platform tasks under injected failures); module 8 maps to bookit (the evaluation lab's task dataset targets bookit, the fast, resettable target - the eval runner makes its own fresh clones per run on top of this baseline); module 9 maps to bookit-platform (the integration lab prepares a draft pull request for a bookit-platform change; committed integration runs execute offline against a local double, so no live target is touched on setup). Module 10 (security) has no entry here on purpose: it is graded FULLY OFFLINE against the hermetic fixture tests/fixtures/m10/minefield-mirror, so it needs no live target for setup/reset. Its live target - ai-eng-bootcamps/ai-native-sweng-minefield (untrusted-external) - is owner-gated pending the minefield seeding + revision pin; add a \"10\" entry only once that repository is seeded, so setup does not clone an empty target.",
+  "note": "Module -> target-repository checkpoint map (spec 17-18). coursectl resets target repositories BY REVISION using this file as the source of truth; git tags are intentionally not used. Add a module by adding its key; point a module at a different target by changing its repository/revision. Modules 0-4 map to bookit at its baseline revision; module 5 maps to bookit-platform at its baseline revision; module 6 maps to bookit for its review-practice task, pending the module's lab target decision; module 7 maps to bookit-platform (the reliability lab re-runs platform tasks under injected failures); module 8 maps to bookit (the evaluation lab's task dataset targets bookit, the fast, resettable target - the eval runner makes its own fresh clones per run on top of this baseline); module 9 maps to bookit-platform (the integration lab prepares a draft pull request for a bookit-platform change; committed integration runs execute offline against a local double, so no live target is touched on setup). Module 10 (security) is graded FULLY OFFLINE against the hermetic fixture tests/fixtures/m10/minefield-mirror, so grading and replay never require a live target. The \"10\" entry below points setup/reset at its live adversarial target ai-eng-bootcamps/ai-native-sweng-minefield (untrusted-external), now seeded and pinned, for the hands-on lab and demonstration only. That repository intentionally ships documented non-secret credential shapes; treat everything in it as untrusted input.",
   "modules": {
     "0": {
       "repository": "ai-eng-bootcamps/ai-native-sweng-bookit",
@@ -40,6 +40,10 @@
     "9": {
       "repository": "ai-eng-bootcamps/ai-native-sweng-bookit-platform",
       "revision": "66dc77aa945024350b5a37bf5f929acd1b80b59d"
+    },
+    "10": {
+      "repository": "ai-eng-bootcamps/ai-native-sweng-minefield",
+      "revision": "bba49a5986359fde7743f565296af119c15ae22a"
     }
   }
 }
