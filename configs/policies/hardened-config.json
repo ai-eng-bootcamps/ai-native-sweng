@@ -1,0 +1,112 @@
+{
+  "audit_retention": {
+    "max_age_days": 90,
+    "retained_event_types": [
+      "policy_evaluated",
+      "approval_resolved",
+      "escalation_created"
+    ]
+  },
+  "capability_shutdown": {
+    "disabled": [
+      "class-3-external-reversible",
+      "class-4-external-consequential"
+    ]
+  },
+  "credential_scopes": {
+    "github": [
+      "repo:status",
+      "pull_request:write"
+    ]
+  },
+  "env_allowlist": [
+    "GOCACHE",
+    "GOPATH",
+    "HOME",
+    "LANG",
+    "PATH"
+  ],
+  "network_policy": {
+    "allow_destinations": [],
+    "default": "deny"
+  },
+  "policy_matrix": [
+    {
+      "audit_required": false,
+      "capability": "class-0-observation",
+      "decision": "allow",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-1-local-reversible",
+      "decision": "allow",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-2-local-consequential",
+      "decision": "approve",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-3-external-reversible",
+      "decision": "approve",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-4-external-consequential",
+      "decision": "deny",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-5-prohibited",
+      "decision": "deny",
+      "repo": "trusted-internal"
+    },
+    {
+      "audit_required": false,
+      "capability": "class-0-observation",
+      "decision": "allow",
+      "repo": "untrusted-external"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-1-local-reversible",
+      "decision": "approve",
+      "repo": "untrusted-external"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-2-local-consequential",
+      "decision": "deny",
+      "repo": "untrusted-external"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-3-external-reversible",
+      "decision": "approve",
+      "repo": "untrusted-external"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-4-external-consequential",
+      "decision": "deny",
+      "repo": "untrusted-external"
+    },
+    {
+      "audit_required": true,
+      "capability": "class-5-prohibited",
+      "decision": "deny",
+      "repo": "untrusted-external"
+    }
+  ],
+  "repository_classification": {
+    "ai-native-sweng-bookit": "trusted-internal",
+    "ai-native-sweng-bookit-platform": "trusted-internal",
+    "ai-native-sweng-minefield": "untrusted-external"
+  }
+}

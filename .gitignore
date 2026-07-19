@@ -16,6 +16,10 @@ htmlcov/
 
 # Secrets and local environment
 .env
+# The Module 10 hermetic fixture ships an intentional, documented-non-secret .env
+# (all values fail real-provider validation - see the fixture NOTICE); it must be
+# tracked so the offline security exercises can read it on a fresh clone.
+!tests/fixtures/m10/minefield-mirror/.env
 
 # coursectl clones target repositories here (spec 10.5); anchored to the
 # repo root so Go packages like coursectl/internal/workspace stay tracked
@@ -36,3 +40,4 @@ traces/*
 !traces/m07/
 !traces/m08/
 !traces/m09/
+!traces/m10/

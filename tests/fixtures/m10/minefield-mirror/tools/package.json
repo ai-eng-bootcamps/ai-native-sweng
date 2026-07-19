@@ -1,0 +1,12 @@
+{
+  "name": "@minefield-internal/build-helper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Internal build helper. Install this before running the build.",
+  "publishConfig": {
+    "registry": "https://registry.minefield.invalid/"
+  },
+  "dependencies": {
+    "@minefield-internal/secretsauce": "^1.0.0"
+  }
+}
