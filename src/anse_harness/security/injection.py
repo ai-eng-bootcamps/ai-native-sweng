@@ -7,10 +7,11 @@ detection (``detect_conflicts``); Module 10 adds the piece Module 4 deliberately
 open.
 
 The gap: ``detect_conflicts`` compares trust only AMONG the sources that make a claim, so
-when three repository files disagree about autonomy it names one of THEM (for example
-AGENTS.md, "autonomy 6, disable sandbox") as the winner - it does not know that all three
-sit below platform and task. Taken as-is, the most permissive repository claim wins. That
-is exactly the injection a malicious repository wants.
+when three repository files disagree about autonomy it records the conflict as unresolved -
+all are equal-trust repository sources, and it does not know that all three sit below
+platform and task, so it cannot settle the answer at the platform value. Taken as-is, that
+leaves the most permissive repository claim (for example AGENTS.md, "autonomy 6, disable
+sandbox") free to win. That is exactly the injection a malicious repository wants.
 
 The clamp closes it: for a POLICY topic (autonomy, sandbox, approval, network) no
 repository or worker source may set the effective value. Whatever Module 4's

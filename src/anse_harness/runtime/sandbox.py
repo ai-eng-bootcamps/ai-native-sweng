@@ -107,8 +107,9 @@ class SandboxManager:
         """Restore the worktree to its starting revision and report what was discarded.
 
         Tracked modifications are reset and untracked files are removed, so a failed or
-        abandoned run leaves a workspace identical to the one it started with (Lesson
-        3.6). Traces live outside the worktree and are preserved untouched.
+        abandoned run leaves no change that could leak into a patch or the next attempt
+        (Lesson 3.6). Files the repository ignores are left in place; traces live outside
+        the worktree and are preserved untouched.
         """
         raise NotImplementedError(
             "Module 3, Lesson 3.6: collect the dirty paths from git status --porcelain, "

@@ -48,7 +48,8 @@ pinned revision; `reset --module <n>` runs the eight-step reset (spec 18)
 against the target clone, never the harness repository; `start-lab` and
 `validate` resolve a lab id against the task dataset. The remaining commands
 (`run-task`, `run-eval`, `replay`, `inspect-trace`, `cleanup`) validate their
-arguments and then report which course module brings their implementation;
+arguments and then report that they are not implemented in this skeleton and
+that the course runs these workflows through the Python harness (`uv run`);
 they never fake behavior.
 
 ## Building and testing locally (maintainers)

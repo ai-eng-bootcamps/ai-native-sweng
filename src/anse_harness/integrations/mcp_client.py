@@ -104,11 +104,16 @@ class StdioMCPClient:
         )
 
     def close(self) -> None:
-        """Close stdin and terminate the server subprocess."""
-        if self._process.stdin is not None:
-            self._process.stdin.close()
+        """Close the pipes and terminate the server subprocess (kill it if it will not exit)."""
+        for pipe in (self._process.stdin, self._process.stdout, self._process.stderr):
+            if pipe is not None:
+                pipe.close()
         self._process.terminate()
-        self._process.wait(timeout=5)
+        try:
+            self._process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self._process.kill()
+            self._process.wait()
 
     def __enter__(self) -> StdioMCPClient:
         return self

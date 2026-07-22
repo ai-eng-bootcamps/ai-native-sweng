@@ -308,3 +308,26 @@ def test_write_trace_records_validation_approval_and_artifact(target: Path, tmp_
     assert approval.payload["decision"] == "approved"
     artifact = next(e for e in events if e.event_type == "artifact_created")
     assert artifact.payload["artifact_type"] == "patch"
+
+
+def test_unexpected_tool_exception_still_rolls_back(
+    target: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A tool that raises a NON-ToolError (an OSError writing a file, a decode error on a
+    # non-UTF-8 file, an unexpected bug) must not escape run_write_task and skip the
+    # rollback: EG2 requires every non-finalized path to restore the worktree.
+    def boom(*args: object, **kwargs: object) -> object:
+        raise OSError("simulated disk failure")
+
+    monkeypatch.setattr(ReplaceTextTool, "run", boom)
+    sandbox, result = _run(target, _edit_then_answer())
+
+    assert result.state.status is RunStatus.FAILED
+    assert result.rollback is not None  # the worktree was restored despite the raw exception
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=sandbox.worktree,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert status == ""  # nothing leaked into the sandbox worktree

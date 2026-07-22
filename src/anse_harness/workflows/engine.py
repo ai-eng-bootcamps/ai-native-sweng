@@ -353,7 +353,7 @@ class WorkflowEngine:
                 task_id=spec.task_id,
                 termination_policy=(
                     "explicit terminal stage required; per-stage iteration caps; "
-                    "cost-budget exhaustion escalates"
+                    "cost-budget exhaustion escalates from every model-driven stage"
                 ),
                 approval_policy=(
                     "plan and patch approvals resolved through the approval gate; deny by default"
